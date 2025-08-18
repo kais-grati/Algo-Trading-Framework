@@ -1,17 +1,29 @@
 from data.data_provider import BaseDataProvider, CSVDataProvider, BinanceDataProvider
 from core.base_strategy import BaseStrategy
+from core.position_manager import PositionManager
 import asyncio, os
 from dotenv import load_dotenv
 from data.base_candle import BaseCandle
 
 load_dotenv()
 
+pm = PositionManager()
+
+
 class Printer(BaseStrategy):
+    signal = True
     def update(self, candle: BaseCandle) -> None:
         print(candle)
+        if self.signal:
+            pm.long(candle, 100)
+            self.signal = False
+        else:
+            pm.close(candle)
+            print(pm.get_unrealized_pnl(candle))
+            
 
-# provider = CSVDataProvider("xrp_5m_last_year.csv", 0.5)
-provider = BinanceDataProvider('XRPUSDT', '1m', key=os.getenv('API_KEY'), secret=os.getenv('API_SECRET'))
+provider = CSVDataProvider("xrp_5m_last_year.csv", 5)
+# provider = BinanceDataProvider('XRPUSDT', '1m', key=os.getenv('API_KEY'), secret=os.getenv('API_SECRET'))
 
 Printer(provider)
 
