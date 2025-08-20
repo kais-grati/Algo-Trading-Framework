@@ -13,14 +13,32 @@ load_dotenv()
 
 UTC_OFFSET = int(os.getenv('UTC_TIMEZONE', 0))  
 
-class BaseDataProvider(ABC):
-    def __init__(self) -> None:
-        self._subscribers: List["BaseStrategy"] = []
+class BaseSubscriber(ABC):
+    """
+    Update the strategy with a new candle.
     
-    def subscribe(self, strategy: "BaseStrategy") -> None:
+    :param candle: The new candle data to update the strategy with.
+    """    
+    async def async_update(self, candle: BaseCandle) -> None:
+        await asyncio.to_thread(self.update, candle)
+        
+    """
+    Synchronous update method for strategies that do not require async handling.
+    
+    :param candle: The new candle data to update the strategy with.
+    """
+    def update(self, candle: BaseCandle) -> None:
+        raise NotImplementedError("Sync update not implemented")
+
+class BaseDataProvider(ABC):
+
+    def __init__(self) -> None:
+        self._subscribers: List["BaseSubscriber"] = []
+    
+    def subscribe(self, strategy: "BaseSubscriber") -> None:
         self._subscribers.append(strategy)
     
-    def unsubscribe(self, strategy: "BaseStrategy") -> None:
+    def unsubscribe(self, strategy: "BaseSubscriber") -> None:
         self._subscribers.remove(strategy)
     
     async def notify(self, candle: BaseCandle) -> None:
@@ -120,5 +138,4 @@ class BinanceDataProvider(BaseDataProvider):
                     await client.close_connection()
                 except Exception:
                     pass
-        
-        
+

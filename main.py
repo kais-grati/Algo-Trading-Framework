@@ -1,22 +1,22 @@
 from data.data_provider import BaseDataProvider, CSVDataProvider, BinanceDataProvider
 from core.base_strategy import BaseStrategy
-from core.position_manager import PositionManager
+from core.position_manager import BasePositionManager
 import asyncio, os
 from dotenv import load_dotenv
 from data.base_candle import BaseCandle
 
 load_dotenv()
 
-pm = PositionManager()
+pm = BasePositionManager()
 
 
 class Printer(BaseStrategy):
-    signal = True
+    signal = 1
     def update(self, candle: BaseCandle) -> None:
         print(candle)
-        if self.signal:
+        if self.signal < 3:
             pm.long(candle, 100)
-            self.signal = False
+            self.signal += 1
         else:
             pm.close(candle)
             print(pm.get_unrealized_pnl(candle))

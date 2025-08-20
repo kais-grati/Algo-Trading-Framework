@@ -32,6 +32,8 @@ class Position:
     realized_pnl: float = 0.0
     tp: List[Tuple[float, float]] = field(default_factory=list)  # List of (price, %) tuples for take-profit orders
     sl: List[Tuple[float, float]] = field(default_factory=list)  # List of (price, %) tuples for stop-loss orders
+    reached_tp: bool = False
+    reached_sl: bool = False
 
     def apply_fill(self, order: Order, is_entry: bool = True) -> None:
         """Update position with an order (entry or exit)."""
