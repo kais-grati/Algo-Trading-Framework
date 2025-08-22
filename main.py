@@ -12,23 +12,18 @@ pm = BasePositionManager()
 
 class Printer(BaseStrategy):
     signal = 1
-    def update(self, candle: BaseCandle) -> None:
+    def on_candle(self, candle: BaseCandle) -> None:
         print(candle)
-        if self.signal < 3:
-            pm.long(candle, 100)
-            self.signal += 1
-        else:
-            pm.close(candle)
-            print(pm.get_unrealized_pnl(candle))
+        if candle.open == 10:
+            self.position_manager.long(candle, 100, tp=[(11, 50), (12, 50)], sl=[(9, 100)], fees=1)
+        
             
 
-provider = CSVDataProvider("xrp_5m_last_year.csv", 5)
+provider = CSVDataProvider("test_data.csv", delay=1)
 # provider = BinanceDataProvider('XRPUSDT', '1m', key=os.getenv('API_KEY'), secret=os.getenv('API_SECRET'))
 
-Printer(provider)
-
-async def main():
-    await provider.run() 
+strat = Printer(provider)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(strat.run())
+    print(strat.backtester)

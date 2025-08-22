@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from core.positions import Position, Order, PositionSide, PositionStatus
 from data.base_candle import BaseCandle
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from uuid import uuid4
 from dataclasses import asdict
 
@@ -11,8 +11,7 @@ class BasePositionManager:
         self.position: Optional[Position] = None
         self.closed_positions: List[Position] = []
         self.log_path = Path(log_path) if log_path else Path(__file__).parent / "position_log.json"
-        if not self.log_path.exists():
-            self.log_path.write_text(json.dumps({"orders": [], "closed_positions": []}))
+        self.log_path.write_text(json.dumps({"orders": [], "closed_positions": []}))
         self.position_count = 0
         self.total_fees = 0.0
         self.total_longs = 0
@@ -28,7 +27,7 @@ class BasePositionManager:
         log["closed_positions"].append(asdict(position))
         self.log_path.write_text(json.dumps(log, default=str, indent=2))
 
-    def long(self, candle: BaseCandle, qty: float, fees: float = 0) -> None:
+    def long(self, candle: BaseCandle, qty: float, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
         """Open or increase a long position."""
         order = Order(
             order_id=str(uuid4()),
@@ -48,15 +47,19 @@ class BasePositionManager:
         pos = Position(
             side=PositionSide.LONG,
             qty=0.0,
-            avg_price=0.0
+            avg_price=0.0,
+            tp=tp,
+            sl=sl
         )
         
         pos.apply_fill(order, is_entry=True)
         self.position = pos
         self._log_order(order)
         self.total_longs += 1
+        self.position_count += 1
 
-    def short(self, candle: BaseCandle, qty: float, fees: float = 0) -> None:
+
+    def short(self, candle: BaseCandle, qty: float, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
         """Open or increase a short position."""
         order = Order(
             order_id=str(uuid4()),
@@ -77,18 +80,21 @@ class BasePositionManager:
         pos = Position(
             side=PositionSide.SHORT,
             qty=0.0,
-            avg_price=0.0
+            avg_price=0.0,
+            tp=tp,
+            sl=sl
         )
         pos.apply_fill(order, is_entry=True)
         self.position = pos
         self._log_order(order)
         self.total_shorts += 1
+        self.position_count += 1
 
     def close(self, candle: BaseCandle, qty: Optional[float] = None, percentage: Optional[float] = None) -> None:
         """Close the current position, fully or by quantity/percentage."""
         if self.position is None or self.position.qty == 0:
-            raise ValueError("No open position to close.")
-
+            return
+        
         if qty is not None:
             close_qty = min(qty, self.position.qty)
         elif percentage is not None:
@@ -111,7 +117,6 @@ class BasePositionManager:
             self.closed_positions.append(self.position)
             self._log_closed_position(self.position)
             self.position = None
-            self.position_count += 1
 
     def get_unrealized_pnl(self, candle: BaseCandle) -> float:
         """Get unrealized PnL for the open position."""

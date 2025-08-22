@@ -18,7 +18,7 @@ class Order:
     order_id: str
     price: float
     quantity: float
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=datetime.now)
     fees: float = 0.0
 
 @dataclass
@@ -26,6 +26,7 @@ class Position:
     side: PositionSide
     qty: float = 0.0
     avg_price: float = 0.0
+    total_fees: float = 0.0
     state: PositionStatus = PositionStatus.OPEN
     entry_orders: List[Order] = field(default_factory=list)
     exit_orders: List[Order] = field(default_factory=list)
@@ -37,6 +38,7 @@ class Position:
 
     def apply_fill(self, order: Order, is_entry: bool = True) -> None:
         """Update position with an order (entry or exit)."""
+        self.total_fees += order.fees
         if is_entry:
             # update weighted average
             total_cost = self.avg_price * self.qty + order.price * order.quantity

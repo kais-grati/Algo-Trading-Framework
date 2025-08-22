@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 load_dotenv()
 
-UTC_OFFSET = int(os.getenv('UTC_TIMEZONE', 0))  
+UTC_OFFSET = int(os.getenv('UTC_TIMEZONE', 0))
 
 class BaseSubscriber(ABC):
     """
@@ -21,7 +21,7 @@ class BaseSubscriber(ABC):
     """    
     async def async_update(self, candle: BaseCandle) -> None:
         await asyncio.to_thread(self.update, candle)
-        
+
     """
     Synchronous update method for strategies that do not require async handling.
     
@@ -29,6 +29,10 @@ class BaseSubscriber(ABC):
     """
     def update(self, candle: BaseCandle) -> None:
         raise NotImplementedError("Sync update not implemented")
+
+    """Called when data stream finishes"""
+    async def on_stream_end(self) -> None:
+        pass
 
 class BaseDataProvider(ABC):
 
@@ -64,6 +68,11 @@ class BaseDataProvider(ABC):
         """Main execution loop"""
         async for candle in self.stream_data():
             await self.notify(candle)
+        
+        # Notify subscribers that stream ended
+        for subscriber in self._subscribers:
+            if hasattr(subscriber, "on_stream_end"):
+                await subscriber.on_stream_end()
 
 class CSVDataProvider(BaseDataProvider):
     def __init__(self, file_path: str, delay: float = 0.0) -> None:
@@ -77,12 +86,12 @@ class CSVDataProvider(BaseDataProvider):
         df = pd.read_csv(self.file_path)
         for index, row in df.iterrows():
             candle = BaseCandle(
-                timestamp=row['open_time'],
-                open=row['open'],
-                high=row['high'],
-                low=row['low'],
-                close=row['close'],
-                volume=row['volume']
+                timestamp=datetime.strptime(row['open_time'], "%Y-%m-%d %H:%M:%S"),
+                open=float(row['open']),
+                high=float(row['high']),
+                low=float(row['low']),
+                close=float(row['close']),
+                volume=float(row['volume'])
             )
             yield candle
             if self.delay > 0:  

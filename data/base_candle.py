@@ -2,6 +2,7 @@ from datetime import datetime
 import pandas as pd
 
 class BaseCandle():
+
     def __init__(self, timestamp: datetime, open: float, high: float, low: float, close: float, volume: float) -> None:
         self.timestamp = timestamp
         self.open = open
@@ -21,3 +22,4 @@ class BaseCandle():
     
     def __str__(self) -> str:
         return f"Candle(timestamp={self.timestamp}, open={self.open}, high={self.high}, low={self.low}, close={self.close}, volume={self.volume})"
+    
