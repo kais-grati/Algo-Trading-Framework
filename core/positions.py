@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
+
 
 class PositionSide(Enum):
     LONG = auto()
@@ -17,7 +18,7 @@ class PositionStatus(Enum):
 class Order:
     order_id: str
     price: float
-    quantity: float
+    quantity: float 
     timestamp: datetime = field(default_factory=datetime.now)
     fees: float = 0.0
 
@@ -66,3 +67,35 @@ class Position:
         if self.side == PositionSide.SHORT:
             unreal = -unreal
         return unreal
+    
+    @staticmethod
+    def short(tp: Optional[List[Tuple[float, float]]] = None,
+              sl: Optional[List[Tuple[float, float]]] = None) -> Position:
+        kwargs = {}
+        if tp is not None:
+            kwargs["tp"] = tp
+        if sl is not None:
+            kwargs["sl"] = sl
+
+        return Position(
+            side=PositionSide.SHORT,
+            qty=0.0,
+            avg_price=0.0,
+            **kwargs
+        )
+    
+    @staticmethod
+    def long(tp: Optional[List[Tuple[float, float]]] = None,
+              sl: Optional[List[Tuple[float, float]]] = None) -> Position:
+        kwargs = {}
+        if tp is not None:
+            kwargs["tp"] = tp
+        if sl is not None:
+            kwargs["sl"] = sl
+
+        return Position(
+            side=PositionSide.LONG,
+            qty=0.0,
+            avg_price=0.0,
+            **kwargs
+        )

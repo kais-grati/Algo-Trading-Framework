@@ -27,12 +27,21 @@ class BasePositionManager:
         log["closed_positions"].append(asdict(position))
         self.log_path.write_text(json.dumps(log, default=str, indent=2))
 
-    def long(self, candle: BaseCandle, qty: float, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
-        """Open or increase a long position."""
+    def long(self, candle: BaseCandle, value: Optional[float] = None, qty: Optional[float] = None, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
+        """
+        Open or increase a long position.
+        Order can be placed either using monetary value (ie. 200$) => value param. or using asset quantity (ie. 2 BTC) => qty param.
+        """
+        if value:
+            quantity = value / candle.close
+        elif qty:
+            quantity = qty
+        else:
+            raise ValueError("Can't place an order without specifying quantity or value")
         order = Order(
             order_id=str(uuid4()),
             price=candle.close,
-            quantity=qty,
+            quantity=quantity,
             fees=fees
         )
         self.total_fees = self.total_fees + fees
@@ -44,14 +53,12 @@ class BasePositionManager:
                 return
             else:
                 raise ValueError("A position of opposite side is already open.")
-        pos = Position(
-            side=PositionSide.LONG,
-            qty=0.0,
-            avg_price=0.0,
-            tp=tp,
-            sl=sl
-        )
-        
+            
+        # Convert tp/sl percentages into quantity
+        tp = [(price, percent * quantity) for (price, percent) in tp]
+        sl = [(price, percent * quantity) for (price, percent) in sl]
+
+        pos = Position.long(tp=tp, sl=sl)
         pos.apply_fill(order, is_entry=True)
         self.position = pos
         self._log_order(order)
@@ -59,12 +66,22 @@ class BasePositionManager:
         self.position_count += 1
 
 
-    def short(self, candle: BaseCandle, qty: float, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
-        """Open or increase a short position."""
+    def short(self, candle: BaseCandle, value: Optional[float] = None, qty: Optional[float] = None, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
+        """
+        Open or increase a short position.
+        Order can be placed either using monetary value (ie. 200$) => value param. or using asset quantity (ie. 2 BTC) => qty param.
+
+        """
+        if value:
+            quantity = value / candle.close
+        elif qty:
+            quantity = qty
+        else:
+            raise ValueError("Can't place an order without specifying quantity or value")
         order = Order(
             order_id=str(uuid4()),
             price=candle.close,
-            quantity=qty,
+            quantity=quantity,
             fees=fees
         )
         self.total_fees = self.total_fees + fees
@@ -77,13 +94,12 @@ class BasePositionManager:
                 return
             else:
                 raise ValueError("A position of opposite side is already open.")
-        pos = Position(
-            side=PositionSide.SHORT,
-            qty=0.0,
-            avg_price=0.0,
-            tp=tp,
-            sl=sl
-        )
+            
+        # Convert tp/sl percentages into quantity
+        tp = [(price, percent * quantity) for (price, percent) in tp]
+        sl = [(price, percent * quantity) for (price, percent) in sl]
+
+        pos = Position.short(tp=tp, sl=sl)
         pos.apply_fill(order, is_entry=True)
         self.position = pos
         self._log_order(order)
@@ -101,7 +117,6 @@ class BasePositionManager:
             close_qty = self.position.qty * min(max(percentage, 0.0), 1.0)
         else:
             close_qty = self.position.qty 
-
         if close_qty <= 0:
             raise ValueError("Close quantity must be positive.")
 

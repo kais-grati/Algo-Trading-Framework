@@ -5,9 +5,10 @@ from data import BaseDataProvider
 from data.data_provider import BaseSubscriber
 from backtesting.backtester import BaseBacktester
 from core.position_manager import BasePositionManager
+import asyncio, os, threading, time
 
 class BaseStrategy(BaseSubscriber):
-    def __init__(self, dataprovider: BaseDataProvider, enable_backtesting: bool = True) -> None:
+    def __init__(self, dataprovider: BaseDataProvider) -> None:
         """
         Initialize the BaseStrategy with a data provider.
         
@@ -15,8 +16,9 @@ class BaseStrategy(BaseSubscriber):
         """
         self.dataprovider = dataprovider
         self.position_manager = BasePositionManager()
-        self.backtester = BaseBacktester(self.position_manager) if enable_backtesting else None
+        self.backtester = BaseBacktester(self.position_manager)
         dataprovider.subscribe(self)
+        self.is_finished = False
     
     def update(self, candle: BaseCandle) -> None:
         """
@@ -45,8 +47,23 @@ class BaseStrategy(BaseSubscriber):
         Called when the data stream ends.
         This can be used to finalize any open positions or perform end-of-stream logic.
         """
-        pass
+        self.is_finished = True
 
-    async def run(self) -> None:
-        """Start the data provider to begin receiving candle updates."""
-        await self.dataprovider.run() 
+    def _start_print_thread(self):
+        def print_loop():
+            while not self.is_finished: 
+                if os.name == 'nt':
+                    os.system('cls')
+                else:
+                    os.system('clear')
+                print(self.backtester)
+                time.sleep(1)  
+
+        thread = threading.Thread(target=print_loop, daemon=True)
+        thread.start()
+
+    def run(self, print_stats: bool = True, plot_stats: bool = False) -> None:
+        if print_stats:
+            self._start_print_thread()
+        
+        asyncio.run(self.dataprovider.run())

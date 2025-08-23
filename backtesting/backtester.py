@@ -132,7 +132,7 @@ class BaseBacktestStats:
         
         # Profit Factor with color coding
         pf_color = Colors.GREEN if self.profit_factor >= 1.5 else Colors.YELLOW if self.profit_factor >= 1.0 else Colors.RED
-        lines.append(f"  {pf_color}Profit Factor{Colors.END}         {format_number(self.profit_factor)}")
+        lines.append(f"  {pf_color}Profit Factor{Colors.END}             {format_number(self.profit_factor)}")
         
         lines.append(format_metric("Average Win", self.avg_win, is_currency=True))
         lines.append(format_metric("Average Loss", self.avg_loss, is_currency=True))
@@ -141,8 +141,7 @@ class BaseBacktestStats:
         lines.append(f"\n{Colors.HEADER}{Colors.BOLD}⚠️  RISK METRICS{Colors.END}")
         
         # Max drawdown with color coding
-        dd_color = Colors.RED if abs(self.max_drawdown) > 1000 else Colors.YELLOW if abs(self.max_drawdown) > 500 else Colors.GREEN
-        lines.append(f"  {dd_color}Max Drawdown{Colors.END}          {format_number(self.max_drawdown, is_currency=True)}")
+        lines.append(format_metric("Max Drawdown", -self.max_drawdown, is_currency=True))
         
         lines.append(format_metric("Max Single Win", self.max_win, is_currency=True))
         lines.append(format_metric("Max Single Loss", self.max_loss, is_currency=True))
@@ -170,6 +169,7 @@ class BaseBacktester():
     def update(self, candle: BaseCandle) -> None:
 
         pos = self.position_manager.position
+        self.stats.pnl = self.position_manager.get_unrealized_pnl(candle)
 
         # Handle open position: TP, SL, Liquidation
         if pos: 
@@ -250,7 +250,6 @@ class BaseBacktester():
         equity = self.stats.pnl + self.stats.total_pnl
         self.stats.equity_curve.append(equity)
 
-        # Track peak equity
         self.peak_equity = max(self.peak_equity, equity)
 
         # Drawdown = peak - current equity
