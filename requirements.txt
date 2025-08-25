@@ -2,3 +2,6 @@ pandas
 python-binance
 python-dotenv
 colorama
+pyqt5
+pyqtgraph
+numpy

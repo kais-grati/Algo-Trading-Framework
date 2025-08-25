@@ -238,7 +238,7 @@ class BaseBacktester():
         self.stats.fees_paid = self.position_manager.total_fees
         total_exits = self.stats.exit_wins + self.stats.exit_losses
         self.stats.exit_winrate = (self.stats.exit_wins / total_exits) if total_exits > 0 else 0.0
-        self.stats.profit_factor = (self.stats.gross_profit / abs(self.stats.gross_loss)) if self.stats.gross_loss < 0 else float('nan')
+        self.stats.profit_factor = (self.stats.gross_profit / abs(self.stats.gross_loss)) if self.stats.gross_loss < 0 else float('inf')
         self.stats.longs = self.position_manager.total_longs
         self.stats.long_winrate = (self.stats.long_wins / self.stats.longs) if self.stats.longs > 0 else 0.0
         self.stats.shorts = self.position_manager.total_shorts
