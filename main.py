@@ -18,7 +18,7 @@ class Printer(BaseStrategy):
         
             
 
-provider = CSVDataProvider("test_data.csv", delay=1)
+provider = CSVDataProvider("test_data.csv", delay=3)
 # provider = BinanceDataProvider('XRPUSDT', '1m', key=os.getenv('API_KEY'), secret=os.getenv('API_SECRET'))
 
 strat = Printer(provider)

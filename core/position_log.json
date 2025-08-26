@@ -1,45 +1,38 @@
 {
   "orders": [
     {
-      "order_id": "9019deee-9f1d-43dd-bf09-8359beff7685",
-      "price": 10.0,
-      "quantity": 10.0,
-      "timestamp": "2025-08-24 15:47:01.020805",
-      "fees": 1
-    },
-    {
-      "order_id": "2b3b4f37-ae29-47f0-8271-322a17c26ae6",
+      "order_id": "aace300c-3fa2-4056-ab6f-d68120f813f9",
       "price": 11.0,
       "quantity": 5.0,
-      "timestamp": "2025-08-24 15:47:02.024941",
+      "timestamp": "2025-08-26 14:30:16.739776",
       "fees": 0.0
     },
     {
-      "order_id": "368c86a7-1797-4964-8126-1c20a4665094",
+      "order_id": "82aa1055-0b87-4519-a3a1-36050348997c",
       "price": 9.0,
       "quantity": 5.0,
-      "timestamp": "2025-08-24 15:47:03.029792",
+      "timestamp": "2025-08-26 14:30:19.742331",
       "fees": 0.0
     },
     {
-      "order_id": "2d4e90cf-98b7-4e8a-91ef-56b5aa031b72",
+      "order_id": "657f4cef-fefb-4c3b-ad35-f1fa49d58697",
       "price": 10.0,
       "quantity": 10.0,
-      "timestamp": "2025-08-24 15:47:04.035687",
+      "timestamp": "2025-08-26 14:30:22.768374",
       "fees": 1
     },
     {
-      "order_id": "99b962c9-7ce3-4301-b5fb-f39c0b341245",
+      "order_id": "d46a1263-6d23-457f-a142-0c21b45fe617",
       "price": 11.0,
       "quantity": 5.0,
-      "timestamp": "2025-08-24 15:47:05.040397",
+      "timestamp": "2025-08-26 14:30:25.783898",
       "fees": 0.0
     },
     {
-      "order_id": "3ea3f526-eff2-4c7d-a501-a627cf535f70",
+      "order_id": "88eaf411-3d77-4c5e-ab86-0013e4ec70de",
       "price": 12.0,
       "quantity": 5.0,
-      "timestamp": "2025-08-24 15:47:06.044633",
+      "timestamp": "2025-08-26 14:30:28.800922",
       "fees": 0.0
     }
   ],
@@ -52,26 +45,26 @@
       "state": "PositionStatus.CLOSED",
       "entry_orders": [
         {
-          "order_id": "9019deee-9f1d-43dd-bf09-8359beff7685",
+          "order_id": "6f90a668-0f12-48e4-b1b9-a496ce6d7c4c",
           "price": 10.0,
           "quantity": 10.0,
-          "timestamp": "2025-08-24 15:47:01.020805",
+          "timestamp": "2025-08-26 14:30:13.727830",
           "fees": 1
         }
       ],
       "exit_orders": [
         {
-          "order_id": "2b3b4f37-ae29-47f0-8271-322a17c26ae6",
+          "order_id": "aace300c-3fa2-4056-ab6f-d68120f813f9",
           "price": 11.0,
           "quantity": 5.0,
-          "timestamp": "2025-08-24 15:47:02.024941",
+          "timestamp": "2025-08-26 14:30:16.739776",
           "fees": 0.0
         },
         {
-          "order_id": "368c86a7-1797-4964-8126-1c20a4665094",
+          "order_id": "82aa1055-0b87-4519-a3a1-36050348997c",
           "price": 9.0,
           "quantity": 5.0,
-          "timestamp": "2025-08-24 15:47:03.029792",
+          "timestamp": "2025-08-26 14:30:19.742331",
           "fees": 0.0
         }
       ],
@@ -82,7 +75,12 @@
           5.0
         ]
       ],
-      "sl": [],
+      "sl": [
+        [
+          9,
+          10.0
+        ]
+      ],
       "reached_tp": true,
       "reached_sl": true
     },
@@ -94,31 +92,36 @@
       "state": "PositionStatus.CLOSED",
       "entry_orders": [
         {
-          "order_id": "2d4e90cf-98b7-4e8a-91ef-56b5aa031b72",
+          "order_id": "657f4cef-fefb-4c3b-ad35-f1fa49d58697",
           "price": 10.0,
           "quantity": 10.0,
-          "timestamp": "2025-08-24 15:47:04.035687",
+          "timestamp": "2025-08-26 14:30:22.768374",
           "fees": 1
         }
       ],
       "exit_orders": [
         {
-          "order_id": "99b962c9-7ce3-4301-b5fb-f39c0b341245",
+          "order_id": "d46a1263-6d23-457f-a142-0c21b45fe617",
           "price": 11.0,
           "quantity": 5.0,
-          "timestamp": "2025-08-24 15:47:05.040397",
+          "timestamp": "2025-08-26 14:30:25.783898",
           "fees": 0.0
         },
         {
-          "order_id": "3ea3f526-eff2-4c7d-a501-a627cf535f70",
+          "order_id": "88eaf411-3d77-4c5e-ab86-0013e4ec70de",
           "price": 12.0,
           "quantity": 5.0,
-          "timestamp": "2025-08-24 15:47:06.044633",
+          "timestamp": "2025-08-26 14:30:28.800922",
           "fees": 0.0
         }
       ],
       "realized_pnl": 15.0,
-      "tp": [],
+      "tp": [
+        [
+          12,
+          5.0
+        ]
+      ],
       "sl": [
         [
           9,

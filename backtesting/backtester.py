@@ -3,6 +3,11 @@ from data.base_candle import BaseCandle
 from data.data_provider import BaseDataProvider, BaseSubscriber
 from dataclasses import dataclass, field, asdict
 from colorama import Fore, Style
+import csv
+import time
+from pathlib import Path
+from collections import deque
+
 
 @dataclass
 class BaseBacktestStats:
@@ -38,7 +43,8 @@ class BaseBacktestStats:
     max_win: float = 0.0  # largest single-trade profit ($)
     max_loss: float = 0.0  # largest single-trade loss ($)
 
-    equity_curve: list = field(default_factory=list)  # time series of equity values ($)
+    equity: float = 0.0   # latest equity value
+    peak_equity: float = 0.0  # highest equity value reached
     max_win_streak: int = 0  # longest streak of consecutive winning positions (count)
     max_loss_streak: int = 0  # longest streak of consecutive losing positions (count)
 
@@ -46,7 +52,10 @@ class BaseBacktestStats:
     avg_position_duration: float = 0.0  # average position holding time (hours)
 
     fees_paid: float = 0.0  # total trading fees paid ($)
-    position_history: list = field(default_factory=list)  # record of executed trades/events (list of dicts)
+
+    # New fields for plotting support
+    current_price: float = 0.0  # current asset price
+    current_position_info: dict = field(default_factory=dict)  # current position details
 
     def __str__(self) -> str:
         """Pretty print backtest statistics with color coding and categorization."""
@@ -138,10 +147,11 @@ class BaseBacktestStats:
         lines.append(format_metric("Average Loss", self.avg_loss, is_currency=True))
         
         # Risk Metrics
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}⚠️  RISK METRICS{Colors.END}")
+        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}⚠️ RISK METRICS{Colors.END}")
         
         # Max drawdown with color coding
         lines.append(format_metric("Max Drawdown", -self.max_drawdown, is_currency=True))
+        lines.append(format_metric("Peak equity", self.peak_equity, is_currency=True))
         
         lines.append(format_metric("Max Single Win", self.max_win, is_currency=True))
         lines.append(format_metric("Max Single Loss", self.max_loss, is_currency=True))
@@ -159,49 +169,85 @@ class BaseBacktestStats:
 
 
 class BaseBacktester():
-    def __init__(self, position_manager: BasePositionManager):
+    def __init__(self, position_manager: BasePositionManager, equity_log_file: str = "equity_log.csv", flush_interval: int = 2):
         self.position_manager = position_manager
         self.stats = BaseBacktestStats()
         self.w_streak = 0
         self.l_streak = 0
         self.peak_equity = 0.0
 
-    def update(self, candle: BaseCandle) -> None:
+        # Equity logging
+        self.equity_log_file = Path(equity_log_file)
+        self.flush_interval = flush_interval
+        self._equity_buffer = []
+        self._last_flush = time.time()
 
+        if not self.equity_log_file.exists():
+            with open(self.equity_log_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["timestamp", "equity"])
+
+    def _log_equity(self, equity: float):
+        """Buffer equity value and flush to disk periodically."""
+        ts = time.time()
+        self._equity_buffer.append((ts, equity))
+
+        # Flush based on buffer size or every 5s
+        if len(self._equity_buffer) >= self.flush_interval or (time.time() - self._last_flush > 5):
+            with open(self.equity_log_file, "a", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerows(self._equity_buffer)
+            self._equity_buffer.clear()
+            self._last_flush = time.time()
+            
+    def update(self, candle: BaseCandle) -> None:
         pos = self.position_manager.position
         self.stats.pnl = self.position_manager.get_unrealized_pnl(candle)
+        self.stats.current_price = candle.close
+
+        # Update current position info for plotting
+        self.stats.current_position_info = self.position_manager.get_current_position_info() or {}
 
         # Handle open position: TP, SL, Liquidation
-        if pos: 
+        if pos and pos.qty > 0:
 
-            if pos.qty > 0:
-                # self.stats.pnl = self.position_manager.get_unrealized_pnl(candle)
-                # self.stats.equity_curve.append(self.stats.pnl + self.stats.total_pnl)
-                # self.stats.max_drawdown = min(self.stats.max_drawdown, self.stats.pnl + self.stats.total_pnl)
-
-                # Take-Profit
-                for idx, (tp_price, tp_qty) in enumerate(pos.tp):
-                    if (pos.side == pos.side.LONG and candle.high >= tp_price) or \
-                    (pos.side == pos.side.SHORT and candle.low <= tp_price):
-                        pos.tp.pop(idx)
-                        self.position_manager.set_hit_take_profit()
-                        self.position_manager.close(candle, qty=tp_qty)
-                        self.stats.exit_wins += 1
-                        self.stats.position_history.append({'type': 'tp', 'price': tp_price, 'candle': candle})
-        
-
-                # Stop-Loss
-                for idx, (sl_price, sl_qty) in enumerate(pos.sl):
-                    if (pos.side == pos.side.LONG and candle.low <= sl_price) or \
-                    (pos.side == pos.side.SHORT and candle.high >= sl_price):
-                        pos.sl.pop(idx)
-                        self.position_manager.set_hit_stop_loss()
-                        self.position_manager.close(candle, qty=sl_qty)
-                        self.stats.exit_losses += 1
-                        self.stats.position_history.append({'type': 'sl', 'price': sl_price, 'candle': candle})
-                        
+            # Take-Profit
+            tp_to_remove = []
+            for idx, (tp_price, tp_qty) in enumerate(pos.tp):
+                if (pos.side == pos.side.LONG and candle.high >= tp_price) or \
+                (pos.side == pos.side.SHORT and candle.low <= tp_price):
+                    tp_to_remove.append(idx)
                     
-            # Check if positon is closed
+                    # Record the TP hit event before closing
+                    self.position_manager.record_tp_hit(candle, tp_price, tp_qty)
+                    
+                    self.position_manager.set_hit_take_profit()
+                    self.position_manager.close(candle, qty=tp_qty)
+                    self.stats.exit_wins += 1
+            
+            # Remove processed TP orders (in reverse order to maintain indices)
+            for idx in reversed(tp_to_remove):
+                pos.tp.pop(idx)
+
+            # Stop-Loss
+            sl_to_remove = []
+            for idx, (sl_price, sl_qty) in enumerate(pos.sl):
+                if (pos.side == pos.side.LONG and candle.low <= sl_price) or \
+                (pos.side == pos.side.SHORT and candle.high >= sl_price):
+                    sl_to_remove.append(idx)
+                    
+                    # Record the SL hit event before closing
+                    self.position_manager.record_sl_hit(candle, sl_price, sl_qty)
+                    
+                    self.position_manager.set_hit_stop_loss()
+                    self.position_manager.close(candle, qty=sl_qty)
+                    self.stats.exit_losses += 1
+            
+            # Remove processed SL orders (in reverse order to maintain indices)
+            for idx in reversed(sl_to_remove):
+                pos.sl.pop(idx)
+                    
+            # Check if position is closed
             if pos.qty == 0:
                 # Check if position is a win
                 if pos.realized_pnl > 0:
@@ -221,19 +267,20 @@ class BaseBacktester():
                     self.l_streak += 1
                     self.w_streak = 0
 
-                open_time = pos.entry_orders[0].timestamp
-                close_time = pos.exit_orders[-1].timestamp
-                duration = (close_time - open_time).total_seconds() / 3600
-                self.stats.exposure_time += duration
-                self.stats.avg_position_duration = self.stats.exposure_time / self.stats.positions if self.stats.positions > 0 else 0.0
+                # Calculate position duration
+                if pos.entry_orders and pos.exit_orders:
+                    open_time = pos.entry_orders[0].timestamp
+                    close_time = pos.exit_orders[-1].timestamp
+                    duration = (close_time - open_time).total_seconds() / 3600
+                    self.stats.exposure_time += duration
 
                 self.stats.max_win_streak = max(self.stats.max_win_streak, self.w_streak)
                 self.stats.max_loss_streak = max(self.stats.max_loss_streak, self.l_streak)
                 self.stats.total_pnl += pos.realized_pnl
-                self.stats.avg_win = self.stats.gross_profit / self.stats.position_wins if self.stats.exit_wins > 0 else 0.0
-                self.stats.avg_loss = self.stats.gross_loss / self.stats.position_losses if self.stats.exit_losses > 0 else 0.0
+                self.stats.avg_win = self.stats.gross_profit / self.stats.position_wins if self.stats.position_wins > 0 else 0.0
+                self.stats.avg_loss = self.stats.gross_loss / self.stats.position_losses if self.stats.position_losses > 0 else 0.0
 
-
+        # Update general stats
         self.stats.positions = self.position_manager.position_count
         self.stats.fees_paid = self.position_manager.total_fees
         total_exits = self.stats.exit_wins + self.stats.exit_losses
@@ -246,43 +293,27 @@ class BaseBacktester():
         self.stats.position_winrate = (self.stats.position_wins / self.stats.positions) if self.stats.positions > 0 else 0.0
         self.stats.position_frquency = self.stats.positions / self.stats.exposure_time if self.stats.exposure_time > 0 else 0.0
         self.stats.avg_position_pnl = self.stats.total_pnl / self.stats.positions if self.stats.positions > 0 else 0.0
+        self.stats.avg_position_duration = self.stats.exposure_time / self.stats.positions if self.stats.positions > 0 else 0.0
 
+        # Update equity and drawdown
         equity = self.stats.pnl + self.stats.total_pnl
-        self.stats.equity_curve.append(equity)
-
-        self.peak_equity = max(self.peak_equity, equity)
-
-        # Drawdown = peak - current equity
-        drawdown = self.peak_equity - equity
+        self.stats.equity = equity
+        self.stats.peak_equity = max(self.peak_equity, equity)
+        drawdown = self.stats.peak_equity - equity
         self.stats.max_drawdown = max(self.stats.max_drawdown, drawdown)
 
+        self._log_equity(equity)
 
+    def get_recent_position_events(self):
+        """Get recent position events for plotting."""
+        return self.position_manager.get_recent_events()
 
-# TODO: Handle liquidation, margin and leverage logic
-            # Liquidation: price moves 100% against entry
-            # if pos.side == pos.side.LONG:
-            #     liquidation_price = pos.avg_price * 0  # 100% down = zero
-            #     if candle.low <= liquidation_price:
-            #         self.position_manager.close(candle)
-            #         self.stats.positions += 1
-            #         self.stats.liquidations += 1
-            #         self.stats.position_history.append({'type': 'liquidation', 'price': liquidation_price, 'candle': candle})
-            #         return
-            # elif pos.side == pos.side.SHORT:
-            #     liquidation_price = pos.avg_price * 2  # 100% up = double
-            #     if candle.high >= liquidation_price:
-            #         self.position_manager.close(candle)
-            #         self.stats.positions += 1
-            #         self.stats.liquidations += 1
-            #         self.stats.position_history.append({'type': 'liquidation', 'price': liquidation_price, 'candle': candle})
-            #         return
-
-        # Let the strategy act (open/close positions)
+    def get_all_position_events(self):
+        """Get all position events for plotting."""
+        return self.position_manager.get_all_events()
 
     def get_results(self) -> dict:
         return asdict(self.stats)
-    
         
     def __str__(self) -> str:
         return str(self.stats)
-    
