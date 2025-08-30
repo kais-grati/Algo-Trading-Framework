@@ -22,9 +22,12 @@ class BaseIndicatorManager:
         indicator: BaseIndicator,
         plottable: bool = True,
         separate_chart: bool = False,
+        color: Optional[str] = None,
         alias: Optional[str] = None
     ) -> str:
         key = alias or indicator.name
+
+        indicator.color = color if color else getattr(indicator, 'color', 'FFFFFF')
 
         self.indicators[key] = IndicatorMeta(
             indicator=indicator,

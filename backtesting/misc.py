@@ -35,6 +35,9 @@ class PlotData:
             'seperate_chart_indicator': self.seperate_chart_indicator
         }
     
+    def __str__(self):
+        return f"PlotData(stats={self.stats}, candle={self.candle}, recent_events={self.recent_events}, current_position={self.current_position}, overlay_indicator={self.overlay_indicator}, seperate_chart_indicator={self.seperate_chart_indicator})"
+    
 class ChartType(Enum):
     CANDLESTICK = 1
     HOLLOW_CANDLESTICK = 2

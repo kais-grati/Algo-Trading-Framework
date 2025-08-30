@@ -13,7 +13,7 @@ class BaseIndicator(ABC):
         self.name = name or self.__class__.__name__
         self.values = deque(maxlen=1000)  # Store indicator values
         self.is_ready = False
-        self._separate_chart = False  # Whether to plot on separate chart
+        self.color = "#FFFFFF"  # Default color for plotting
         
     @abstractmethod
     def calculate(self, candles: List[Dict]) -> Optional[Any]:

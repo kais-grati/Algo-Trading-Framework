@@ -4,6 +4,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
 from collections import deque
 import numpy as np
+from typing import Optional
 from datetime import datetime
 from backtesting.candle_item import CandlestickItem
 from backtesting.misc import TimeAxisItem, PlotData, ChartType
@@ -18,6 +19,16 @@ class TradingDashboard(Process):
         self.chart_type = chart_type
         self.show_n_candles = show_n_candles
         self.candle_buffer = np.empty((0, 5), dtype=float)
+        
+        # Indicator storage
+        self.overlay_indicator_plots = {}  # Dictionary to store overlay indicator plot items
+        self.separate_indicator_plots = {}  # Dictionary to store separate chart indicators
+        self.separate_chart_widgets = {}  # Dictionary to store separate chart plot widgets
+        self.indicator_colors = [
+            '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7',
+            '#dda0dd', '#98d8c8', '#fdcb6e', '#6c5ce7', '#a29bfe'
+        ]
+        self.color_index = 0
 
     def run(self):
         app = QtWidgets.QApplication(sys.argv)
@@ -96,8 +107,8 @@ class TradingDashboard(Process):
         """)
         
         # Add widgets to content layout
-        content_layout.addWidget(charts_widget, 7)  # 70% width
-        content_layout.addWidget(scroll_area, 3)    # 30% width
+        content_layout.addWidget(charts_widget, 7)
+        content_layout.addWidget(scroll_area, 3)   
         
         main_layout.addLayout(content_layout)
         
@@ -162,14 +173,15 @@ class TradingDashboard(Process):
         
         # Create legend items that exactly match the markers
         legend_items = [
-            ('t1', '#00ff00', 12, 'Open Long'),
-            ('t', '#570000', 12, 'Open Short'),
-            ('x', '#ffff00', 10, 'Close Full'),
-            ('x', '#ffaa00', 8, 'Close Partial'),
-            ('o', '#004B00', 10, 'Take Profit'),
-            ('o', '#570000', 10, 'Stop Loss'),
-            ('+', '#004B00', 8, 'Increase Long'),
-            ('+', '#ff8800', 8, 'Increase Short')
+            ('t1', '#0077ff', 12, 'Open Long'),
+            ('t', '#0077ff', 12, 'Open Short'),
+            ('x', '#ffcc00', 10, 'Close Full'),
+            ('x', '#ff8800', 8, 'Close Partial'),
+            ('o', '#8000ff', 10, 'Take Profit'),
+            ('o', '#ff8800', 10, 'Stop Loss'),
+            ('+', '#009999', 8, 'Increase Long'),
+            ('+', '#aa00aa', 8, 'Increase Short')
+
         ]
         
         for symbol, color, size, description in legend_items:
@@ -226,9 +238,12 @@ class TradingDashboard(Process):
         return legend_widget
 
     def create_charts(self, parent_layout):
-        """Create all chart widgets"""
+        """Create all chart widgets with linked time axes"""
         
-        # Price chart with position markers
+        # Main splitter for all charts
+        self.main_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        
+        # Price chart with position markers (master chart for time axis)
         self.price_plot_widget = pg.PlotWidget(
             axisItems={'bottom': TimeAxisItem(orientation='bottom')},
             title="Price Chart with Positions"
@@ -238,6 +253,10 @@ class TradingDashboard(Process):
         self.price_plot_widget.setLabel('bottom', 'Time')
         self.price_plot_widget.showGrid(x=True, y=True, alpha=0.3)
         
+        # Store reference to master view box for linking
+        self.master_view_box = self.price_plot_widget.getViewBox()
+        
+        # Add price chart elements based on chart type
         if self.chart_type == ChartType.CANDLESTICK:
             self.candlestick_item = CandlestickItem()
             self.price_plot_widget.addItem(self.candlestick_item)
@@ -259,7 +278,7 @@ class TradingDashboard(Process):
         price_layout.addWidget(legend_widget)
         price_layout.addWidget(self.price_plot_widget)
         
-        # Volume bars (secondary y-axis)
+        # Volume bars with linked time axis
         self.volume_plot_widget = pg.PlotWidget(
             axisItems={'bottom': TimeAxisItem(orientation='bottom')},
             title="Volume"
@@ -268,11 +287,14 @@ class TradingDashboard(Process):
         self.volume_plot_widget.setLabel('left', 'Volume')
         self.volume_plot_widget.setLabel('bottom', 'Time')
         self.volume_plot_widget.showGrid(x=True, y=True, alpha=0.3)
+        
+        # Link volume chart X-axis to price chart
+        self.volume_plot_widget.setXLink(self.price_plot_widget)
+        
         self.volume_bars = pg.BarGraphItem(x=[], height=[], width=5, brush='#4444ff')
         self.volume_plot_widget.addItem(self.volume_bars)
         
-        
-        # Equity curve plot
+        # Equity curve plot with linked time axis
         self.equity_plot_widget = pg.PlotWidget(
             axisItems={'bottom': TimeAxisItem(orientation='bottom')},
             title="Equity Curve"
@@ -281,10 +303,14 @@ class TradingDashboard(Process):
         self.equity_plot_widget.setLabel('left', 'Equity ($)')
         self.equity_plot_widget.setLabel('bottom', 'Time')
         self.equity_plot_widget.showGrid(x=True, y=True, alpha=0.3)
+        
+        # Link equity chart X-axis to price chart
+        self.equity_plot_widget.setXLink(self.price_plot_widget)
+        
         self.equity_curve = self.equity_plot_widget.plot(pen=pg.mkPen(color='#00ff88', width=2))
         self.equity_fill = self.equity_plot_widget.plot(pen=None, fillLevel=0, brush=pg.mkBrush(color=(0, 255, 136, 30)))
         
-        # Drawdown plot
+        # Drawdown plot with linked time axis
         self.drawdown_plot_widget = pg.PlotWidget(
             axisItems={'bottom': TimeAxisItem(orientation='bottom')},
             title="Drawdown"
@@ -293,20 +319,158 @@ class TradingDashboard(Process):
         self.drawdown_plot_widget.setLabel('left', 'Drawdown ($)')
         self.drawdown_plot_widget.setLabel('bottom', 'Time')
         self.drawdown_plot_widget.showGrid(x=True, y=True, alpha=0.3)
+        
+        # Link drawdown chart X-axis to price chart
+        self.drawdown_plot_widget.setXLink(self.price_plot_widget)
+        
         self.drawdown_curve = self.drawdown_plot_widget.plot(pen=pg.mkPen(color='#ff4444', width=2))
         self.drawdown_fill = self.drawdown_plot_widget.plot(pen=None, fillLevel=0, brush=pg.mkBrush(color=(255, 68, 68, 30)))
         
-        splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
-        splitter.addWidget(price_container)
-        splitter.addWidget(self.volume_plot_widget)
-        splitter.addWidget(self.equity_plot_widget)
-        splitter.addWidget(self.drawdown_plot_widget)
+        # Add charts to main splitter
+        self.main_splitter.addWidget(price_container)
+        self.main_splitter.addWidget(self.volume_plot_widget)
+        self.main_splitter.addWidget(self.equity_plot_widget)
+        self.main_splitter.addWidget(self.drawdown_plot_widget)
         
-        # Optional: set initial stretch ratios
-        splitter.setSizes([500, 100, 200, 100])
+        # Set initial stretch ratios
+        self.main_splitter.setSizes([500, 100, 200, 100])
         
-        # Add splitter to the parent layout
-        parent_layout.addWidget(splitter)
+        # Add main splitter to the parent layout
+        parent_layout.addWidget(self.main_splitter)
+
+    def create_separate_indicator_chart(self, indicator_name: str, title: Optional[str] = None):
+        """Create a new chart widget for separate indicators with linked time axis"""
+        if title is None:
+            title = f"{indicator_name} Indicator"
+            
+        plot_widget = pg.PlotWidget(
+            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
+            title=title
+        )
+        plot_widget.setBackground('#2d2d2d')
+        plot_widget.setLabel('left', indicator_name)
+        plot_widget.setLabel('bottom', 'Time')
+        plot_widget.showGrid(x=True, y=True, alpha=0.3)
+        
+        # CRITICAL: Link this chart's X-axis to the master price chart
+        plot_widget.setXLink(self.price_plot_widget)
+        
+        # Add to main splitter
+        self.main_splitter.addWidget(plot_widget)
+        
+        # Store reference
+        self.separate_chart_widgets[indicator_name] = plot_widget
+        
+        # Adjust splitter sizes to accommodate new chart
+        current_sizes = self.main_splitter.sizes()
+        new_size = 150  # Height for indicator chart
+        current_sizes.append(new_size)
+        self.main_splitter.setSizes(current_sizes)
+        
+        return plot_widget
+
+    def update_overlay_indicators(self, overlay_indicators):
+        """Update overlay indicators on the price chart"""
+        if not overlay_indicators:
+            return
+            
+        x_data = list(self.time_data)
+        if not x_data:
+            return
+            
+        for indicator_name, indicator in overlay_indicators.items():
+            try:
+                # Get indicator values
+                values = indicator.get_values()
+                if not values:
+                    continue
+                
+                # Ensure we have enough x data points
+                min_len = min(len(x_data), len(values))
+                if min_len == 0:
+                    continue
+                
+                x_subset = x_data[-min_len:]
+                y_subset = values[-min_len:]
+                
+                self.update_overlay_indicator(indicator_name, indicator.color, x_subset, y_subset)
+                    
+            except Exception as e:
+                print(f"Error updating overlay indicator {indicator_name}: {e}")
+
+    def update_overlay_indicator(self, indicator_name, color, x_data, y_data):
+        """Update simple overlay indicators (SMA, EMA, etc.)"""
+        if indicator_name not in self.overlay_indicator_plots:
+            # Create new plot item
+            plot_item = self.price_plot_widget.plot(
+                pen=pg.mkPen(color=color, width=2),
+                name=indicator_name
+            )
+            self.overlay_indicator_plots[indicator_name] = plot_item
+        
+        # Update plot data
+        self.overlay_indicator_plots[indicator_name].setData(x_data, y_data)
+
+
+    def update_separate_indicators(self, separate_indicators):
+        """Update indicators that require separate charts"""
+        if not separate_indicators:
+            return
+            
+        x_data = list(self.time_data)
+        if not x_data:
+            return
+            
+        for indicator_name, indicator in separate_indicators.items():
+            try:
+                # Get indicator values
+                values = indicator.get_values()
+                if not values:
+                    continue
+                
+                # Ensure we have enough x data points
+                min_len = min(len(x_data), len(values))
+                if min_len == 0:
+                    continue
+                
+                x_subset = x_data[-min_len:]
+                y_subset = values[-min_len:]
+                
+                # Create chart if it doesn't exist
+                if indicator_name not in self.separate_chart_widgets:
+                    self.create_separate_indicator_chart(indicator_name)
+                
+                plot_widget = self.separate_chart_widgets[indicator_name]
+                
+                self.update_separate_indicator(indicator_name, indicator.color, plot_widget, x_subset, y_subset)
+                    
+            except Exception as e:
+                print(f"Error updating separate indicator {indicator_name}: {e}")
+
+    def update_separate_indicator(self, indicator_name, color, plot_widget, x_data, y_data):
+        """Update simple separate indicators (RSI, etc.)"""
+        plot_key = f"{indicator_name}_main"
+        
+        if plot_key not in self.separate_indicator_plots:
+            # Create new plot item
+            plot_item = plot_widget.plot(
+                pen=pg.mkPen(color=color, width=2),
+                name=indicator_name
+            )
+            self.separate_indicator_plots[plot_key] = plot_item
+            
+            # Add reference lines for RSI
+            if 'RSI' in indicator_name:
+                # Add 70 and 30 reference lines
+                overbought_line = pg.InfiniteLine(pos=70, angle=0, pen=pg.mkPen(color='#ff4444', style=QtCore.Qt.PenStyle.DashLine))
+                oversold_line = pg.InfiniteLine(pos=30, angle=0, pen=pg.mkPen(color='#00ff88', style=QtCore.Qt.PenStyle.DashLine))
+                plot_widget.addItem(overbought_line)
+                plot_widget.addItem(oversold_line)
+        
+        # Update plot data
+        self.separate_indicator_plots[plot_key].setData(x_data, y_data)
+
+    
 
     def create_stats_groups(self, parent_layout):
         """Create organized statistics display groups"""
@@ -427,7 +591,35 @@ class TradingDashboard(Process):
         parent_layout.addWidget(self.events_group)
         parent_layout.addWidget(self.risk_group)
         parent_layout.addWidget(self.ls_group)
-        parent_layout.addStretch()  # Push everything to top
+        parent_layout.addStretch()
+
+
+    def remove_indicator_plots(self, indicator_name):
+        """Remove indicator plots when indicators are removed"""
+        # Remove overlay indicators
+        if indicator_name in self.overlay_indicator_plots:
+            self.price_plot_widget.removeItem(self.overlay_indicator_plots[indicator_name])
+            del self.overlay_indicator_plots[indicator_name]
+        
+        # Remove separate chart indicators
+        keys_to_remove = [key for key in self.separate_indicator_plots.keys() if key.startswith(indicator_name)]
+        for key in keys_to_remove:
+            plot_item = self.separate_indicator_plots[key]
+            # Find which widget contains this plot item and remove it
+            for widget_name, widget in self.separate_chart_widgets.items():
+                if widget_name == indicator_name:
+                    try:
+                        widget.removeItem(plot_item)
+                    except:
+                        pass
+            del self.separate_indicator_plots[key]
+        
+        # Remove separate chart widget if no more indicators use it
+        if indicator_name in self.separate_chart_widgets:
+            widget = self.separate_chart_widgets[indicator_name]
+            self.main_splitter.removeWidget(widget)
+            widget.deleteLater()
+            del self.separate_chart_widgets[indicator_name]
 
     def add_position_markers(self, events):
         """Add position markers to price chart with vertical offsets to avoid overlap"""
@@ -459,15 +651,16 @@ class TradingDashboard(Process):
 
                 y_val = price + offset  # shift marker above candle
 
+
                 marker_styles = {
-                    'open_long': {'color': "#004B00", 'symbol': 't1', 'size': 12},
-                    'open_short': {'color': "#570000", 'symbol': 't', 'size': 12},
-                    'close_full': {'color': '#ffff00', 'symbol': 'x', 'size': 10},
-                    'close_partial': {'color': '#ffaa00', 'symbol': 'x', 'size': 8},
-                    'tp_hit': {'color': '#004B00', 'symbol': 'o', 'size': 10},
-                    'sl_hit': {'color': '#570000', 'symbol': 'o', 'size': 10},
-                    'increase_long': {'color': '#004B00', 'symbol': '+', 'size': 8},
-                    'increase_short': {'color': '#ff8800', 'symbol': '+', 'size': 8}
+                    'open_long': {'color': "#0077ff", 'symbol': 't1', 'size': 12},
+                    'open_short': {'color': "#0077ff", 'symbol': 't', 'size': 12},
+                    'close_full': {'color': '#ffcc00', 'symbol': 'x', 'size': 10},
+                    'close_partial': {'color': '#ff8800', 'symbol': 'x', 'size': 8},
+                    'tp_hit': {'color': '#8000ff', 'symbol': 'o', 'size': 10},
+                    'sl_hit': {'color': '#ff8800', 'symbol': 'o', 'size': 10},
+                    'increase_long': {'color': '#009999', 'symbol': '+', 'size': 8},
+                    'increase_short': {'color': '#aa00aa', 'symbol': '+', 'size': 8}
                 }
 
                 if event_type in marker_styles:
@@ -491,8 +684,6 @@ class TradingDashboard(Process):
 
             except Exception:
                 continue
-
-
 
     def format_currency(self, value):
         """Format currency with color coding"""
@@ -529,12 +720,16 @@ class TradingDashboard(Process):
                 candle = plot_data.candle
                 recent_events = plot_data.recent_events or []
                 current_position = plot_data.current_position
+                overlay_indicators = plot_data.overlay_indicator or {}
+                separate_indicators = plot_data.seperate_chart_indicator or {}
             else:
                 # Fallback for direct stats objects
                 stats = plot_data
                 candle = None
                 recent_events = []
                 current_position = None
+                overlay_indicators = {}
+                separate_indicators = {}
             
             # Store recent events
             if recent_events:
@@ -593,6 +788,12 @@ class TradingDashboard(Process):
             self.update_stats_display()
             self.update_events_list()
             self.update_header_status()
+            
+            # Update indicators if available
+            if hasattr(self.current_plot_data, 'overlay_indicator'):
+                self.update_overlay_indicators(self.current_plot_data.overlay_indicator)
+            if hasattr(self.current_plot_data, 'seperate_chart_indicator'):
+                self.update_separate_indicators(self.current_plot_data.seperate_chart_indicator)
         
         # Check stop condition
         if self.stop_event.is_set():
@@ -657,8 +858,6 @@ class TradingDashboard(Process):
                 height=volume_y[-min_len:], 
                 width=bar_width
             )
-
-
 
     def update_header_status(self):
         """Update header status information"""
