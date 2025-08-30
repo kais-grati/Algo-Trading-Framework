@@ -5,36 +5,19 @@ from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
 from collections import deque
 import numpy as np
 from datetime import datetime
+from backtesting.candle_item import CandlestickItem
+from backtesting.misc import TimeAxisItem, PlotData, ChartType
 
-class PlotData:
-    """Data structure for sending comprehensive plotting information."""
-    def __init__(self, stats, candle, recent_events=None, current_position=None):
-        self.stats = stats
-        self.candle = candle
-        self.recent_events = recent_events or []
-        self.current_position = current_position
-
-    def to_dict(self):
-        return {
-            'stats': self.stats,
-            'candle': {
-                'timestamp': self.candle.timestamp,
-                'open': self.candle.open,
-                'high': self.candle.high,
-                'low': self.candle.low,
-                'close': self.candle.close,
-                'volume': getattr(self.candle, 'volume', 0)
-            },
-            'recent_events': self.recent_events,
-            'current_position': self.current_position
-        }
 
 class TradingDashboard(Process):
-    def __init__(self, stop_event, queue: Queue, interval_ms: int = 100):
+    def __init__(self, stop_event, queue: Queue, chart_type: ChartType = ChartType.CANDLESTICK, show_n_candles: int = 100, interval_ms: int = 100):
         super().__init__(daemon=False)
         self.stop_event = stop_event
         self.queue = queue
         self.interval_ms = interval_ms
+        self.chart_type = chart_type
+        self.show_n_candles = show_n_candles
+        self.candle_buffer = np.empty((0, 5), dtype=float)
 
     def run(self):
         app = QtWidgets.QApplication(sys.argv)
@@ -171,30 +154,129 @@ class TradingDashboard(Process):
         header_layout.addWidget(status_widget, 3)
         parent_layout.addWidget(header_widget)
 
+    def create_legend_widget(self):
+        """Create a legend widget for position markers using actual scatter plot items"""
+        legend_widget = QtWidgets.QWidget()
+        legend_layout = QtWidgets.QHBoxLayout(legend_widget)
+        legend_layout.setContentsMargins(10, 5, 10, 5)
+        
+        # Create legend items that exactly match the markers
+        legend_items = [
+            ('t1', '#00ff00', 12, 'Open Long'),
+            ('t', '#570000', 12, 'Open Short'),
+            ('x', '#ffff00', 10, 'Close Full'),
+            ('x', '#ffaa00', 8, 'Close Partial'),
+            ('o', '#004B00', 10, 'Take Profit'),
+            ('o', '#570000', 10, 'Stop Loss'),
+            ('+', '#004B00', 8, 'Increase Long'),
+            ('+', '#ff8800', 8, 'Increase Short')
+        ]
+        
+        for symbol, color, size, description in legend_items:
+            # Create a mini container for each legend item
+            item_widget = QtWidgets.QWidget()
+            item_layout = QtWidgets.QHBoxLayout(item_widget)
+            item_layout.setContentsMargins(5, 2, 5, 2)
+            item_layout.setSpacing(8)
+            
+            # Create a mini plot widget for the symbol
+            symbol_plot = pg.PlotWidget()
+            symbol_plot.setFixedSize(25, 20)
+            symbol_plot.setBackground('#2d2d2d')
+            symbol_plot.hideAxis('left')
+            symbol_plot.hideAxis('bottom')
+            symbol_plot.setMouseEnabled(x=False, y=False)
+            symbol_plot.setMenuEnabled(False)
+            symbol_plot.setXRange(0, 1)
+            symbol_plot.setYRange(0, 1)
+            
+            # Add the actual scatter plot item
+            scatter = pg.ScatterPlotItem(
+                x=[0.5],
+                y=[0.5],
+                pen=pg.mkPen(color=color, width=2),
+                brush=pg.mkBrush(color=color),
+                symbol=symbol,
+                size=size
+            )
+            symbol_plot.addItem(scatter)
+            
+            # Description label
+            desc_label = QtWidgets.QLabel(description)
+            desc_label.setStyleSheet("color: #cccccc; font-size: 10px;")
+            
+            item_layout.addWidget(symbol_plot)
+            item_layout.addWidget(desc_label)
+            item_widget.setMaximumWidth(140)
+            
+            legend_layout.addWidget(item_widget)
+        
+        legend_layout.addStretch()  # Push items to left
+        
+        # Style the legend widget
+        legend_widget.setStyleSheet("""
+            QWidget {
+                background-color: #2d2d2d;
+                border: 1px solid #3c3c3c;
+                border-radius: 5px;
+            }
+        """)
+        legend_widget.setMaximumHeight(40)
+        
+        return legend_widget
+
     def create_charts(self, parent_layout):
         """Create all chart widgets"""
         
         # Price chart with position markers
-        self.price_plot_widget = pg.PlotWidget(title="Price Chart with Positions")
+        self.price_plot_widget = pg.PlotWidget(
+            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
+            title="Price Chart with Positions"
+        )
         self.price_plot_widget.setBackground('#2d2d2d')
         self.price_plot_widget.setLabel('left', 'Price ($)')
         self.price_plot_widget.setLabel('bottom', 'Time')
         self.price_plot_widget.showGrid(x=True, y=True, alpha=0.3)
         
-        # Price line
-        self.price_curve = self.price_plot_widget.plot(pen=pg.mkPen(color='#ffffff', width=2))
+        if self.chart_type == ChartType.CANDLESTICK:
+            self.candlestick_item = CandlestickItem()
+            self.price_plot_widget.addItem(self.candlestick_item)
+        elif self.chart_type == ChartType.HOLLOW_CANDLESTICK:
+            from backtesting.candle_item import HollowCandlestickItem
+            self.candlestick_item = HollowCandlestickItem()
+            self.price_plot_widget.addItem(self.candlestick_item)
+        elif self.chart_type == ChartType.LINE:
+            self.price_curve = self.price_plot_widget.plot(pen=pg.mkPen(color="#FFFFFF", width=2))
+        
+        # Create container for price chart and legend
+        price_container = QtWidgets.QWidget()
+        price_layout = QtWidgets.QVBoxLayout(price_container)
+        price_layout.setContentsMargins(0, 0, 0, 0)
+        price_layout.setSpacing(2)
+        
+        # Add legend above the price chart
+        legend_widget = self.create_legend_widget()
+        price_layout.addWidget(legend_widget)
+        price_layout.addWidget(self.price_plot_widget)
         
         # Volume bars (secondary y-axis)
-        self.volume_plot_widget = pg.PlotWidget(title="Volume")
+        self.volume_plot_widget = pg.PlotWidget(
+            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
+            title="Volume"
+        )
         self.volume_plot_widget.setBackground('#2d2d2d')
         self.volume_plot_widget.setLabel('left', 'Volume')
         self.volume_plot_widget.setLabel('bottom', 'Time')
         self.volume_plot_widget.showGrid(x=True, y=True, alpha=0.3)
-        self.volume_bars = pg.BarGraphItem(x=[], height=[], width=0.6, brush='#4444ff')
+        self.volume_bars = pg.BarGraphItem(x=[], height=[], width=5, brush='#4444ff')
         self.volume_plot_widget.addItem(self.volume_bars)
         
+        
         # Equity curve plot
-        self.equity_plot_widget = pg.PlotWidget(title="Equity Curve")
+        self.equity_plot_widget = pg.PlotWidget(
+            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
+            title="Equity Curve"
+        )
         self.equity_plot_widget.setBackground('#2d2d2d')
         self.equity_plot_widget.setLabel('left', 'Equity ($)')
         self.equity_plot_widget.setLabel('bottom', 'Time')
@@ -203,7 +285,10 @@ class TradingDashboard(Process):
         self.equity_fill = self.equity_plot_widget.plot(pen=None, fillLevel=0, brush=pg.mkBrush(color=(0, 255, 136, 30)))
         
         # Drawdown plot
-        self.drawdown_plot_widget = pg.PlotWidget(title="Drawdown")
+        self.drawdown_plot_widget = pg.PlotWidget(
+            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
+            title="Drawdown"
+        )
         self.drawdown_plot_widget.setBackground('#2d2d2d')
         self.drawdown_plot_widget.setLabel('left', 'Drawdown ($)')
         self.drawdown_plot_widget.setLabel('bottom', 'Time')
@@ -211,11 +296,17 @@ class TradingDashboard(Process):
         self.drawdown_curve = self.drawdown_plot_widget.plot(pen=pg.mkPen(color='#ff4444', width=2))
         self.drawdown_fill = self.drawdown_plot_widget.plot(pen=None, fillLevel=0, brush=pg.mkBrush(color=(255, 68, 68, 30)))
         
-        # Add charts to layout with appropriate sizing
-        parent_layout.addWidget(self.price_plot_widget, 2)    # Price chart (largest)
-        parent_layout.addWidget(self.volume_plot_widget, 1)   # Volume chart
-        parent_layout.addWidget(self.equity_plot_widget, 2)   # Equity chart
-        parent_layout.addWidget(self.drawdown_plot_widget, 1) # Drawdown chart
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        splitter.addWidget(price_container)
+        splitter.addWidget(self.volume_plot_widget)
+        splitter.addWidget(self.equity_plot_widget)
+        splitter.addWidget(self.drawdown_plot_widget)
+        
+        # Optional: set initial stretch ratios
+        splitter.setSizes([500, 100, 200, 100])
+        
+        # Add splitter to the parent layout
+        parent_layout.addWidget(splitter)
 
     def create_stats_groups(self, parent_layout):
         """Create organized statistics display groups"""
@@ -289,7 +380,8 @@ class TradingDashboard(Process):
         self.events_group = QtWidgets.QGroupBox("Recent Events")
         events_layout = QtWidgets.QVBoxLayout(self.events_group)
         self.events_list = QtWidgets.QListWidget()
-        self.events_list.setMaximumHeight(150)
+        self.events_list.setMaximumHeight(400)
+        self.events_list.setMinimumHeight(300)
         self.events_list.setStyleSheet("""
             QListWidget {
                 background-color: #2d2d2d;
@@ -338,46 +430,69 @@ class TradingDashboard(Process):
         parent_layout.addStretch()  # Push everything to top
 
     def add_position_markers(self, events):
-        """Add position markers to price chart"""
-        # Clear existing markers
+        """Add position markers to price chart with vertical offsets to avoid overlap"""
         for marker in self.position_markers:
             self.price_plot_widget.removeItem(marker)
         self.position_markers.clear()
-        
-        # Add new markers for recent events
-        for event in events[-20:]:  # Show last 20 events
+
+        for event in events:
             try:
                 event_type = event.get('event_type', '')
                 price = event.get('price', 0)
-                time_index = len(self.time_data)  # Use current time index
-                
-                # Define marker styles for different event types
+                timestamp = event.get('timestamp', datetime.now())
+
+                if isinstance(timestamp, datetime):
+                    x_val = timestamp.timestamp()
+                else:
+                    x_val = float(timestamp)
+
+                # Vertical offset
+                offset = 0
+                if event_type in ['open_long', 'open_short']:
+                    offset = 0.0   
+                elif event_type in ['close_full', 'close_partial']:
+                    offset = 0.2
+                elif event_type in ['tp_hit', 'sl_hit']:
+                    offset = 0.4
+                elif event_type in ['increase_long', 'increase_short']:
+                    offset = 0.6
+
+                y_val = price + offset  # shift marker above candle
+
                 marker_styles = {
-                    'open_long': {'color': '#00ff00', 'symbol': 'u', 'size': 12},
-                    'open_short': {'color': '#ff0000', 'symbol': 'd', 'size': 12},
+                    'open_long': {'color': "#004B00", 'symbol': 't1', 'size': 12},
+                    'open_short': {'color': "#570000", 'symbol': 't', 'size': 12},
                     'close_full': {'color': '#ffff00', 'symbol': 'x', 'size': 10},
                     'close_partial': {'color': '#ffaa00', 'symbol': 'x', 'size': 8},
-                    'tp_hit': {'color': '#00ff88', 'symbol': 's', 'size': 10},
-                    'sl_hit': {'color': '#ff4444', 'symbol': 's', 'size': 10},
-                    'increase_long': {'color': '#88ff00', 'symbol': '+', 'size': 8},
+                    'tp_hit': {'color': '#004B00', 'symbol': 'o', 'size': 10},
+                    'sl_hit': {'color': '#570000', 'symbol': 'o', 'size': 10},
+                    'increase_long': {'color': '#004B00', 'symbol': '+', 'size': 8},
                     'increase_short': {'color': '#ff8800', 'symbol': '+', 'size': 8}
                 }
-                
+
                 if event_type in marker_styles:
                     style = marker_styles[event_type]
                     scatter = pg.ScatterPlotItem(
-                        x=[time_index],
-                        y=[price],
+                        x=[x_val],
+                        y=[y_val],
                         pen=pg.mkPen(color=style['color'], width=2),
                         brush=pg.mkBrush(color=style['color']),
                         symbol=style['symbol'],
-                        size=style['size']
+                        size=style['size'],
+                        data=[{'event_type': event_type, 'price': price, 'timestamp': timestamp}]
                     )
+
+                    # Set tooltip text
+                    tooltip_text = f"Event: {event_type}\nPrice: ${price:.2f}\nTime: {timestamp.strftime('%H:%M:%S') if isinstance(timestamp, datetime) else timestamp}"
+                    scatter.setToolTip(tooltip_text)
+
                     self.price_plot_widget.addItem(scatter)
                     self.position_markers.append(scatter)
-                    
+
             except Exception:
-                continue  # Skip invalid events
+                continue
+
+
 
     def format_currency(self, value):
         """Format currency with color coding"""
@@ -399,92 +514,151 @@ class TradingDashboard(Process):
 
     def update_dashboard(self):
         """Update dashboard with latest data"""
-        try:
-            # Get all available data from queue
-            while not self.queue.empty():
-                plot_data = self.queue.get_nowait()
-                self.current_plot_data = plot_data
+        new_data_received = False
+        
+        # Get all available data from queue
+        while not self.queue.empty():
+            plot_data = self.queue.get_nowait()
+            self.current_plot_data = plot_data
+            new_data_received = True
+            
+            # Extract data from PlotData object
+            if hasattr(plot_data, 'to_dict'):
+                data_dict = plot_data.to_dict()
+                stats = plot_data.stats
+                candle = plot_data.candle
+                recent_events = plot_data.recent_events or []
+                current_position = plot_data.current_position
+            else:
+                # Fallback for direct stats objects
+                stats = plot_data
+                candle = None
+                recent_events = []
+                current_position = None
+            
+            # Store recent events
+            if recent_events:
+                self.recent_events.extend(recent_events)
+            
+            # Add data points for equity/drawdown
+            if hasattr(stats, 'equity'):
+                self.equity_data.append(stats.equity)
                 
-                # Extract data from PlotData object
-                if hasattr(plot_data, 'to_dict'):
-                    data_dict = plot_data.to_dict()
-                    stats = plot_data.stats
-                    candle = plot_data.candle
-                    recent_events = plot_data.recent_events or []
-                    current_position = plot_data.current_position
+                # Calculate drawdown from peak
+                if len(self.equity_data) > 0:
+                    peak = max(self.equity_data)
+                    current_dd = peak - stats.equity
+                    self.drawdown_data.append(-current_dd)
                 else:
-                    # Fallback for direct stats objects
-                    stats = plot_data
-                    candle = None
-                    recent_events = []
-                    current_position = None
+                    self.drawdown_data.append(0)
+            
+            # Add candle data - this is the key fix
+            if candle and hasattr(candle, 'timestamp'):
+                timestamp = candle.timestamp.timestamp()
                 
-                # Store recent events
-                if recent_events:
-                    self.recent_events.extend(recent_events)
+                # Add to time data
+                self.time_data.append(timestamp)
                 
-                # Add data points
-                if hasattr(stats, 'equity'):
-                    self.equity_data.append(stats.equity)
+                # For candlestick charts OHLC buffer
+                if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
+                    # Create new candle array [timestamp, open, close, low, high]
+                    new_candle = np.array([[
+                        timestamp,
+                        candle.open,
+                        candle.close, 
+                        candle.low,
+                        candle.high
+                    ]])
                     
-                    # Calculate drawdown from peak
-                    if len(self.equity_data) > 0:
-                        peak = max(self.equity_data)
-                        current_dd = peak - stats.equity
-                        self.drawdown_data.append(-current_dd)  # Negative for display
+                    # Add to buffer
+                    if len(self.candle_buffer) == 0:
+                        self.candle_buffer = new_candle
                     else:
-                        self.drawdown_data.append(0)
+                        self.candle_buffer = np.vstack([self.candle_buffer, new_candle])
+                    
+                    # Keep only last N candles
+                    if len(self.candle_buffer) > self.show_n_candles:
+                        self.candle_buffer = self.candle_buffer[-self.show_n_candles:]
                 
-                # Add price and volume data if available
-                if candle:
+                # For line charts, just store close price
+                elif self.chart_type == ChartType.LINE:
                     self.price_data.append(candle.close)
-                    self.volume_data.append(getattr(candle, 'volume', 0))
                 
-                self.time_data.append(len(self.time_data))
-                
-            # Update charts if we have data
-            if self.current_plot_data and len(self.time_data) > 0:
-                self.update_charts()
-                self.update_stats_display()
-                self.update_events_list()
-                self.update_header_status()
-                
-        except Exception as e:
-            pass  # Handle queue empty gracefully
-
+                # Store volume data
+                self.volume_data.append(getattr(candle, 'volume', 0))
+        
+        # Only update charts if we received new data
+        if new_data_received and len(self.time_data) > 0:
+            self.update_charts()
+            self.update_stats_display()
+            self.update_events_list()
+            self.update_header_status()
+        
         # Check stop condition
         if self.stop_event.is_set():
             pass
 
     def update_charts(self):
         """Update all chart displays"""
+        # Only proceed if we have data
+        if len(self.time_data) == 0:
+            return
+            
         x_data = list(self.time_data)
         
-        # Update equity curve
-        if len(self.equity_data) > 0:
+        # ---- Equity curve ----
+        if self.equity_data and len(self.equity_data) > 0:
             equity_y = list(self.equity_data)
-            self.equity_curve.setData(x_data, equity_y)
-            self.equity_fill.setData(x_data, equity_y)
+            # Ensure x_data and equity_y have same length
+            min_len = min(len(x_data), len(equity_y))
+            self.equity_curve.setData(x_data[-min_len:], equity_y[-min_len:])
+            self.equity_fill.setData(x_data[-min_len:], equity_y[-min_len:])
         
-        # Update drawdown curve
-        if len(self.drawdown_data) > 0:
+        # ---- Drawdown ----
+        if self.drawdown_data and len(self.drawdown_data) > 0:
             drawdown_y = list(self.drawdown_data)
-            self.drawdown_curve.setData(x_data, drawdown_y)
-            self.drawdown_fill.setData(x_data, drawdown_y)
+            min_len = min(len(x_data), len(drawdown_y))
+            self.drawdown_curve.setData(x_data[-min_len:], drawdown_y[-min_len:])
+            self.drawdown_fill.setData(x_data[-min_len:], drawdown_y[-min_len:])
         
-        # Update price chart
-        if len(self.price_data) > 0:
-            price_y = list(self.price_data)
-            self.price_curve.setData(x_data, price_y)
+        # ---- Price charts ----
+        if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
             
-            # Add position markers
-            if hasattr(self.current_plot_data, 'recent_events') and self.current_plot_data.recent_events:
-                self.add_position_markers(self.current_plot_data.recent_events)
+            if len(self.candle_buffer) > 0:
+                # Ensure we have valid OHLC data
+                if self.candle_buffer.shape[1] == 5:  # timestamp, open, close, low, high
+                    self.candlestick_item.setOHLCData(self.candle_buffer)
+                else:
+                    print(f"Invalid candle buffer shape: {self.candle_buffer.shape}")
         
-        # Update volume chart
-        if len(self.volume_data) > 0:
+        elif self.chart_type == ChartType.LINE and len(self.price_data) > 0:
+            price_y = list(self.price_data)
+            min_len = min(len(x_data), len(price_y))
+            self.price_curve.setData(x_data[-min_len:], price_y[-min_len:])
+        
+        # Add position markers if available
+        if (hasattr(self.current_plot_data, "recent_events") and 
+            self.current_plot_data.recent_events):
+            self.add_position_markers(self.current_plot_data.recent_events)
+        
+        # ---- Volume bars ----
+        if self.volume_data and len(self.volume_data) > 0:
             volume_y = list(self.volume_data)
-            self.volume_bars.setOpts(x=x_data, height=volume_y, width=0.6)
+            min_len = min(len(x_data), len(volume_y))
+            # Adjust bar width based on time intervals
+            if len(x_data) > 1:
+                avg_interval = (x_data[-1] - x_data[0]) / len(x_data)
+                bar_width = avg_interval * 0.5  # 80% of interval
+            else:
+                bar_width = 100
+            
+            self.volume_bars.setOpts(
+                x=x_data[-min_len:], 
+                height=volume_y[-min_len:], 
+                width=bar_width
+            )
+
+
 
     def update_header_status(self):
         """Update header status information"""

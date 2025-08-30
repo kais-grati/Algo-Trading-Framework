@@ -1,14 +1,16 @@
 from abc import abstractmethod
 from multiprocessing import Event, Queue
 from data import BaseCandle
-from typing import Optional
+from typing import List, Optional, Tuple
 from data import BaseDataProvider
 from data.data_provider import BaseSubscriber
 from backtesting.backtester import BaseBacktester
 from backtesting.plotter import TradingDashboard, PlotData
 from core.position_manager import BasePositionManager
+from core.indicator_manager import BaseIndicatorManager, BaseIndicator
 import asyncio, os, time, threading
 from collections import deque
+from backtesting.misc import ChartType
 
 
 
@@ -27,6 +29,8 @@ class BaseStrategy(BaseSubscriber):
 
         bt_kwargs = backtester_kwargs or {}
         self.backtester = BaseBacktester(self.position_manager, **bt_kwargs)
+
+        self.indicator_manager = BaseIndicatorManager()
 
         dataprovider.subscribe(self)
 
@@ -58,6 +62,7 @@ class BaseStrategy(BaseSubscriber):
 
         # Run strategy logic
         self.on_candle(candle)
+        self.indicator_manager.update_all(candle)
 
         # Update backtester
         if self.backtester:
@@ -77,12 +82,14 @@ class BaseStrategy(BaseSubscriber):
                         stats=self.backtester.stats,
                         candle=candle,
                         recent_events=recent_events,
-                        current_position=current_position
+                        current_position=current_position,
+                        overlay_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=False),
+                        seperate_chart_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=True)
                     )
                     
                     self.queue.put_nowait(plot_data)
                 except Exception:
-                    pass  # Handle queue full gracefully
+                    pass
 
     @abstractmethod
     def on_candle(self, candle: BaseCandle) -> None:
@@ -115,8 +122,16 @@ class BaseStrategy(BaseSubscriber):
         thread = threading.Thread(target=print_loop, daemon=True)
         thread.start()
 
-    def _start_stats_plotting(self):
-        plotter = TradingDashboard(self.plot_stop_event, self.queue)
+    def _start_stats_plotting(self,
+        chart_type: ChartType = ChartType.CANDLESTICK,
+        show_n_candles: int = 100,
+        interval_ms: int = 100
+    ):
+        plotter = TradingDashboard(self.plot_stop_event, 
+                                   self.queue, 
+                                   chart_type=chart_type, 
+                                   show_n_candles=show_n_candles, 
+                                   interval_ms=interval_ms)
         plotter.start()
 
     def get_price_history(self):
@@ -149,8 +164,15 @@ class BaseStrategy(BaseSubscriber):
                 summary[event_type].append(event)
         
         return summary
+    
 
-    def run(self, print_stats: bool = True, plot_stats: bool = False) -> None:
+    def run(self, 
+            print_stats: bool = True, 
+            plot_stats: bool = False,
+            chart_type: Optional[ChartType] = None,
+            show_n_candles: Optional[int] = None,
+            interval_ms: Optional[int] = None
+        ) -> None:
         """
         Run the strategy with optional statistics display and plotting.
         
@@ -164,7 +186,9 @@ class BaseStrategy(BaseSubscriber):
             self._start_print_thread()
 
         if plot_stats:
-            self._start_stats_plotting()
+            self._start_stats_plotting(chart_type=chart_type or ChartType.CANDLESTICK, 
+                                       show_n_candles=show_n_candles or 100, 
+                                       interval_ms=interval_ms or 100)
         
         asyncio.run(self.dataprovider.run())
 
