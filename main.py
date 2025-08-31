@@ -5,7 +5,7 @@ import asyncio, os
 from dotenv import load_dotenv
 from data.base_candle import BaseCandle
 from backtesting.misc import ChartType
-from core.indicators import SMA, RSI, MACD
+from core.indicators import SMA, VWAP, EMA, MVWAP
 
 load_dotenv()
 
@@ -15,7 +15,10 @@ pm = BasePositionManager()
 class Printer(BaseStrategy):
     def __init__(self, provider: BaseDataProvider):
         super().__init__(provider)
-        self.indicator_manager.add_indicator(SMA(3), color="#5900FF")
+        self.indicator_manager.add_indicator(SMA(14), color="#5900FF")
+        self.indicator_manager.add_indicator(EMA(14), color="#FF004C")
+        self.indicator_manager.add_indicator(VWAP(), color="#FFEE00")
+
         # self.indicator_manager.add_indicator(MACD(), color="#00FFA3", separate_chart=True)
 
     def on_candle(self, candle: BaseCandle) -> None:
@@ -24,7 +27,7 @@ class Printer(BaseStrategy):
         
             
 
-provider = CSVDataProvider("xrp_5m_last_year.csv", delay=1)
+provider = CSVDataProvider("xrp_5m_last_year.csv", delay=0.1)
 # provider = BinanceDataProvider('XRPUSDT', '1s', key=os.getenv('API_KEY'), secret=os.getenv('API_SECRET'))
 
 strat = Printer(provider)

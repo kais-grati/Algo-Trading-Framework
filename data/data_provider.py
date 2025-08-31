@@ -75,7 +75,7 @@ class BaseDataProvider(ABC):
                 await subscriber.on_stream_end()
 
 class CSVDataProvider(BaseDataProvider):
-    def __init__(self, file_path: str, delay: float = 0.0) -> None:
+    def __init__(self, file_path: str, delay: float = 0.1) -> None:
         super().__init__()
         self.file_path = file_path
         self.delay = delay

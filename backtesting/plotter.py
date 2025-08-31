@@ -8,6 +8,7 @@ from typing import Optional
 from datetime import datetime
 from backtesting.candle_item import CandlestickItem
 from backtesting.misc import TimeAxisItem, PlotData, ChartType
+from backtesting.tools import MeasureTool
 
 
 class TradingDashboard(Process):
@@ -61,25 +62,32 @@ class TradingDashboard(Process):
                 font-size: 14px;
                 font-weight: bold;
             }
+            QSplitter::handle {
+                background-color: #3c3c3c;
+            }
+            QSplitter::handle:hover {
+                background-color: #5c5c5c;
+            }
         """)
         
         # Main layout
         main_layout = QtWidgets.QVBoxLayout(main_widget)
         
-        # Title and current info bar
-        self.create_header(main_layout)
+        # Create main horizontal splitter for charts and stats
+        self.content_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         
-        # Content layout (horizontal split)
-        content_layout = QtWidgets.QHBoxLayout()
-        
-        # Left side: Charts (70% width)
+        # Left side: Charts container
         charts_widget = QtWidgets.QWidget()
         charts_layout = QtWidgets.QVBoxLayout(charts_widget)
+        charts_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Create chart plots
+        # Create chart plots FIRST (so price_plot_widget exists)
         self.create_charts(charts_layout)
-        
-        # Right side: Statistics (30% width)
+
+        # Title and current info bar (after charts are created)
+        self.create_header(main_layout)
+
+        # Right side: Statistics 
         stats_widget = QtWidgets.QWidget()
         stats_layout = QtWidgets.QVBoxLayout(stats_widget)
         
@@ -106,11 +114,19 @@ class TradingDashboard(Process):
             }
         """)
         
-        # Add widgets to content layout
-        content_layout.addWidget(charts_widget, 7)
-        content_layout.addWidget(scroll_area, 3)   
+        # Add widgets to content splitter
+        self.content_splitter.addWidget(charts_widget)
+        self.content_splitter.addWidget(scroll_area)
         
-        main_layout.addLayout(content_layout)
+        # Set initial sizes: 70% charts, 30% stats
+        self.content_splitter.setSizes([1120, 480])  # Based on 1600px total width
+        
+        # Set minimum sizes to prevent complete collapse
+        charts_widget.setMinimumWidth(400)
+        scroll_area.setMinimumWidth(200)
+        
+        # Add the splitter to main layout
+        main_layout.addWidget(self.content_splitter)
         
         # Data storage
         self.equity_data = deque(maxlen=5000)
@@ -133,8 +149,9 @@ class TradingDashboard(Process):
         app.exec_()
 
     def create_header(self, parent_layout):
-        """Create header with title and current status"""
+        """Create header with title, status, and measure controls"""
         header_widget = QtWidgets.QWidget()
+        header_widget.setMaximumHeight(100)
         header_layout = QtWidgets.QHBoxLayout(header_widget)
         
         # Title
@@ -146,6 +163,9 @@ class TradingDashboard(Process):
             color: #00aaff;
             margin: 10px;
         """)
+        
+        # Measure tool controls
+        measure_controls = self.add_measure_tool_to_dashboard()
         
         # Current status (right aligned)
         self.current_price_label = QtWidgets.QLabel("Price: $0.00")
@@ -161,7 +181,9 @@ class TradingDashboard(Process):
             label.setStyleSheet("font-size: 14px; color: #cccccc; margin: 2px;")
             status_layout.addWidget(label)
         
-        header_layout.addWidget(title_label, 7)
+        # Layout: Title (40%) | Measure Controls (30%) | Status (30%)
+        header_layout.addWidget(title_label, 4)
+        header_layout.addWidget(measure_controls, 3)
         header_layout.addWidget(status_widget, 3)
         parent_layout.addWidget(header_widget)
 
@@ -368,6 +390,68 @@ class TradingDashboard(Process):
         self.main_splitter.setSizes(current_sizes)
         
         return plot_widget
+    
+    def add_measure_tool_to_dashboard(self):
+        """Add measure tool to the trading dashboard"""
+        
+        # Initialize measure tool for price chart
+        self.measure_tool = MeasureTool(self.price_plot_widget)
+        
+        # Create measure tool controls
+        measure_controls = self.create_measure_controls()
+        
+        # Add controls to header (modify your create_header method)
+        return measure_controls
+
+    def create_measure_controls(self):
+        """Create measure tool control buttons"""
+        controls_widget = QtWidgets.QWidget()
+        controls_layout = QtWidgets.QHBoxLayout(controls_widget)
+        
+        # Measure button
+        measure_button = QtWidgets.QPushButton("Measure Tool")
+        measure_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077ff;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 3px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0099ff;
+            }
+        """)
+        measure_button.clicked.connect(self.measure_tool.toggle_measure_mode)
+        self.measure_tool.measure_button = measure_button
+        
+        # Clear measurements button
+        clear_button = QtWidgets.QPushButton("Clear")
+        clear_button.setStyleSheet("""
+            QPushButton {
+                background-color: #666666;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 3px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #888888;
+            }
+        """)
+        clear_button.clicked.connect(self.clear_all_measurements)
+        
+        controls_layout.addWidget(measure_button)
+        controls_layout.addWidget(clear_button)
+        controls_layout.addStretch()
+        
+        return controls_widget
+
+    def clear_all_measurements(self):
+        """Clear all measurements from the chart"""
+        self.measure_tool.clear_measure()
 
     def update_overlay_indicators(self, overlay_indicators):
         """Update overlay indicators on the price chart"""

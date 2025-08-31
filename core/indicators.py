@@ -229,3 +229,194 @@ class MACD(BaseIndicator):
                 return result
         
         return None
+    
+class VWAP(BaseIndicator):
+    """Volume Weighted Average Price Indicator"""
+    
+    def __init__(self, reset_period: str = 'daily', name: Optional[str] = None):
+        """
+        Initialize VWAP indicator
+        
+        Args:
+            reset_period: When to reset VWAP calculation ('daily', 'weekly', 'session', or 'never')
+            name: Optional custom name for the indicator
+        """
+        # VWAP doesn't use a traditional period, but we set it to 1 for base class
+        super().__init__(1, name or f"VWAP_{reset_period}")
+        self.reset_period = reset_period
+        self.cumulative_pv = 0  # Cumulative price * volume
+        self.cumulative_volume = 0  # Cumulative volume
+        self.last_reset_time = None
+        self.color = "#FF6B35"  # Orange color for VWAP
+    
+    def _should_reset(self, candle_data: Dict) -> bool:
+        """Determine if VWAP should reset based on reset_period"""
+        if self.reset_period == 'never':
+            return False
+        
+        if self.last_reset_time is None:
+            return True
+        
+        current_time = candle_data.get('timestamp', candle_data.get('time'))
+        if current_time is None:
+            return False
+        
+        # Convert timestamp to datetime if it's a number
+        if isinstance(current_time, (int, float)):
+            from datetime import datetime
+            current_time = datetime.fromtimestamp(current_time)
+        
+        if isinstance(self.last_reset_time, (int, float)):
+            from datetime import datetime
+            last_time = datetime.fromtimestamp(self.last_reset_time)
+        else:
+            last_time = self.last_reset_time
+        
+        if self.reset_period == 'daily':
+            return current_time.date() != last_time.date()
+        elif self.reset_period == 'weekly':
+            return current_time.isocalendar()[1] != last_time.isocalendar()[1]
+        elif self.reset_period == 'session':
+            # Reset at market open (9:30 AM for US markets)
+            # This is a simplified version - you might want to customize for your market
+            return (current_time.hour >= 9 and current_time.minute >= 30 and 
+                   last_time.hour < 9 or (last_time.hour == 9 and last_time.minute < 30))
+        
+        return False
+    
+    def _get_typical_price(self, candle_data: Dict) -> float:
+        """Calculate typical price (HLC/3)"""
+        high = candle_data.get('high', candle_data.get('close'))
+        low = candle_data.get('low', candle_data.get('close'))
+        close = candle_data['close']
+        
+        return (high + low + close) / 3
+    
+    def calculate(self, candles: List[Dict]) -> Optional[float]:
+        """Calculate VWAP from a list of candles"""
+        if not candles:
+            return None
+        
+        cumulative_pv = 0
+        cumulative_volume = 0
+        
+        for candle in candles:
+            typical_price = self._get_typical_price(candle)
+            volume = candle.get('volume', 1)  # Default to 1 if no volume data
+            
+            cumulative_pv += typical_price * volume
+            cumulative_volume += volume
+        
+        if cumulative_volume == 0:
+            return None
+        
+        return cumulative_pv / cumulative_volume
+    
+    def update(self, candle_data: Dict) -> Optional[float]:
+        """Update VWAP with new candle data"""
+        # Check if we need to reset
+        if self._should_reset(candle_data):
+            self.cumulative_pv = 0
+            self.cumulative_volume = 0
+            self.last_reset_time = candle_data.get('timestamp', candle_data.get('time'))
+        
+        # Calculate typical price and volume
+        typical_price = self._get_typical_price(candle_data)
+        volume = candle_data.get('volume', 1)  # Default to 1 if no volume data
+        
+        # Update cumulative values
+        self.cumulative_pv += typical_price * volume
+        self.cumulative_volume += volume
+        
+        # Calculate VWAP
+        if self.cumulative_volume > 0:
+            vwap_value = self.cumulative_pv / self.cumulative_volume
+            self.values.append(vwap_value)
+            self.is_ready = True
+            return vwap_value
+        
+        return None
+    
+    def reset(self):
+        """Manually reset VWAP calculation"""
+        self.cumulative_pv = 0
+        self.cumulative_volume = 0
+        self.last_reset_time = None
+        self.values.clear()
+        self.is_ready = False
+    
+    def get_cumulative_stats(self) -> Dict[str, float]:
+        """Get current cumulative statistics"""
+        return {
+            'cumulative_pv': self.cumulative_pv,
+            'cumulative_volume': self.cumulative_volume,
+            'current_vwap': self.get_current_value()
+        }
+
+
+class MVWAP(BaseIndicator):
+    """Moving VWAP - VWAP calculated over a rolling window"""
+    
+    def __init__(self, period: int = 20, name: Optional[str] = None):
+        """
+        Initialize Moving VWAP indicator
+        
+        Args:
+            period: Number of periods to calculate VWAP over
+            name: Optional custom name for the indicator
+        """
+        super().__init__(period, name or f"MVWAP_{period}")
+        self.candle_buffer = deque(maxlen=period)
+        self.color = "#9B59B6"  # Purple color for MVWAP
+    
+    def _get_typical_price(self, candle_data: Dict) -> float:
+        """Calculate typical price (HLC/3)"""
+        high = candle_data.get('high', candle_data.get('close'))
+        low = candle_data.get('low', candle_data.get('close'))
+        close = candle_data['close']
+        
+        return (high + low + close) / 3
+    
+    def calculate(self, candles: List[Dict]) -> Optional[float]:
+        """Calculate Moving VWAP from a list of candles"""
+        if len(candles) < self.period:
+            return None
+        
+        recent_candles = candles[-self.period:]
+        cumulative_pv = 0
+        cumulative_volume = 0
+        
+        for candle in recent_candles:
+            typical_price = self._get_typical_price(candle)
+            volume = candle.get('volume', 1)
+            
+            cumulative_pv += typical_price * volume
+            cumulative_volume += volume
+        
+        if cumulative_volume == 0:
+            return None
+        
+        return cumulative_pv / cumulative_volume
+    
+    def update(self, candle_data: Dict) -> Optional[float]:
+        """Update Moving VWAP with new candle data"""
+        self.candle_buffer.append(candle_data)
+        
+        if len(self.candle_buffer) >= self.period:
+            cumulative_pv = 0
+            cumulative_volume = 0
+            
+            for candle in self.candle_buffer:
+                typical_price = self._get_typical_price(candle)
+                volume = candle.get('volume', 1)
+                
+                cumulative_pv += typical_price * volume
+                cumulative_volume += volume
+            
+            if cumulative_volume > 0:
+                mvwap_value = cumulative_pv / cumulative_volume
+                self.values.append(mvwap_value)
+                self.is_ready = True
+                return mvwap_value
+        
+        return None

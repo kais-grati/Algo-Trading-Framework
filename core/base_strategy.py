@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from multiprocessing import Event, Queue
+import sys
 from data import BaseCandle
 from typing import List, Optional, Tuple
 from data import BaseDataProvider
@@ -190,7 +191,14 @@ class BaseStrategy(BaseSubscriber):
                                        show_n_candles=show_n_candles or 100, 
                                        interval_ms=interval_ms or 100)
         
-        asyncio.run(self.dataprovider.run())
+        try:
+            asyncio.run(self.dataprovider.run())
+        except KeyboardInterrupt:
+            print("Stopping strategy...")
+            self.print_stop_event.set()
+            self.plot_stop_event.set()
+            sys.exit()
+
 
     def export_trade_log(self, filename: str = "trade_log.json"):
         """Export all position events and price history to a JSON file."""
