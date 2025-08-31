@@ -788,100 +788,123 @@ class TradingDashboard(Process):
         return f"<span style='color: {color};'>{percentage:.2f}%</span>"
 
     def update_dashboard(self):
-        """Update dashboard with latest data"""
-        new_data_received = False
-        
-        # Get all available data from queue
-        while not self.queue.empty():
-            plot_data = self.queue.get_nowait()
-            self.current_plot_data = plot_data
-            new_data_received = True
+            """Update dashboard with latest data"""
+            new_data_received = False
             
-            # Extract data from PlotData object
-            if hasattr(plot_data, 'to_dict'):
-                data_dict = plot_data.to_dict()
-                stats = plot_data.stats
-                candle = plot_data.candle
-                recent_events = plot_data.recent_events or []
-                current_position = plot_data.current_position
-                overlay_indicators = plot_data.overlay_indicator or {}
-                separate_indicators = plot_data.seperate_chart_indicator or {}
-            else:
-                # Fallback for direct stats objects
-                stats = plot_data
-                candle = None
-                recent_events = []
-                current_position = None
-                overlay_indicators = {}
-                separate_indicators = {}
-            
-            # Store recent events
-            if recent_events:
-                self.recent_events.extend(recent_events)
-            
-            # Add data points for equity/drawdown
-            if hasattr(stats, 'equity'):
-                self.equity_data.append(stats.equity)
+            # Get all available data from queue
+            while not self.queue.empty():
+                plot_data = self.queue.get_nowait()
+                self.current_plot_data = plot_data
+                new_data_received = True
                 
-                # Calculate drawdown from peak
-                if len(self.equity_data) > 0:
-                    peak = max(self.equity_data)
-                    current_dd = peak - stats.equity
-                    self.drawdown_data.append(-current_dd)
+                # Extract data from PlotData object
+                if hasattr(plot_data, 'to_dict'):
+                    data_dict = plot_data.to_dict()
+                    stats = plot_data.stats
+                    candle = plot_data.candle
+                    recent_events = plot_data.recent_events or []
+                    current_position = plot_data.current_position
+                    overlay_indicators = plot_data.overlay_indicator or {}
+                    separate_indicators = plot_data.seperate_chart_indicator or {}
                 else:
-                    self.drawdown_data.append(0)
-            
-            # Add candle data - this is the key fix
-            if candle and hasattr(candle, 'timestamp'):
-                timestamp = candle.timestamp.timestamp()
+                    # Fallback for direct stats objects
+                    stats = plot_data
+                    candle = None
+                    recent_events = []
+                    current_position = None
+                    overlay_indicators = {}
+                    separate_indicators = {}
                 
-                # Add to time data
-                self.time_data.append(timestamp)
+                # Store recent events
+                if recent_events:
+                    self.recent_events.extend(recent_events)
                 
-                # For candlestick charts OHLC buffer
-                if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
-                    # Create new candle array [timestamp, open, close, low, high]
-                    new_candle = np.array([[
-                        timestamp,
-                        candle.open,
-                        candle.close, 
-                        candle.low,
-                        candle.high
-                    ]])
+                # Add data points for equity/drawdown
+                if hasattr(stats, 'equity'):
+                    self.equity_data.append(stats.equity)
                     
-                    # Add to buffer
-                    if len(self.candle_buffer) == 0:
-                        self.candle_buffer = new_candle
+                    # Calculate drawdown from peak
+                    if len(self.equity_data) > 0:
+                        peak = max(self.equity_data)
+                        current_dd = peak - stats.equity
+                        self.drawdown_data.append(-current_dd)
                     else:
-                        self.candle_buffer = np.vstack([self.candle_buffer, new_candle])
+                        self.drawdown_data.append(0)
+                
+                # Handle candle data with live updates
+                if candle and hasattr(candle, 'timestamp'):
+                    timestamp = candle.timestamp.timestamp()
                     
-                    # Keep only last N candles
-                    if len(self.candle_buffer) > self.show_n_candles:
-                        self.candle_buffer = self.candle_buffer[-self.show_n_candles:]
-                
-                # For line charts, just store close price
-                elif self.chart_type == ChartType.LINE:
-                    self.price_data.append(candle.close)
-                
-                # Store volume data
-                self.volume_data.append(getattr(candle, 'volume', 0))
-        
-        # Only update charts if we received new data
-        if new_data_received and len(self.time_data) > 0:
-            self.update_charts()
-            self.update_stats_display()
-            self.update_events_list()
-            self.update_header_status()
+                    # Check if this is an update to existing candle or a new one
+                    is_update = False
+                    if len(self.time_data) > 0 and self.time_data[-1] == timestamp:
+                        is_update = True
+                    
+                    if not is_update:
+                        # New candle - add to time data
+                        self.time_data.append(timestamp)
+                    
+                    # For candlestick charts - handle live OHLC updates
+                    if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
+                        # Create new candle array [timestamp, open, close, low, high]
+                        new_candle = np.array([[
+                            timestamp,
+                            candle.open,
+                            candle.close, 
+                            candle.low,
+                            candle.high
+                        ]])
+                        
+                        if is_update and len(self.candle_buffer) > 0:
+                            # Update the last candle in buffer
+                            self.candle_buffer[-1] = new_candle[0]
+                        else:
+                            # Add new candle to buffer
+                            if len(self.candle_buffer) == 0:
+                                self.candle_buffer = new_candle
+                            else:
+                                self.candle_buffer = np.vstack([self.candle_buffer, new_candle])
+                        
+                        # Keep only last N candles
+                        if len(self.candle_buffer) > self.show_n_candles:
+                            self.candle_buffer = self.candle_buffer[-self.show_n_candles:]
+                            # Also trim time_data to match
+                            while len(self.time_data) > self.show_n_candles:
+                                self.time_data.popleft()
+                    
+                    # For line charts - handle live price updates
+                    elif self.chart_type == ChartType.LINE:
+                        if is_update and len(self.price_data) > 0:
+                            # Update the last price point
+                            self.price_data[-1] = candle.close
+                        else:
+                            # Add new price point
+                            self.price_data.append(candle.close)
+                    
+                    # Handle volume data with live updates
+                    if is_update and len(self.volume_data) > 0:
+                        # Update the last volume point
+                        self.volume_data[-1] = getattr(candle, 'volume', 0)
+                    else:
+                        # Add new volume point
+                        self.volume_data.append(getattr(candle, 'volume', 0))
             
-            # Update indicators if available
-            if hasattr(self.current_plot_data, 'overlay_indicator'):
-                self.update_overlay_indicators(self.current_plot_data.overlay_indicator)
-            if hasattr(self.current_plot_data, 'seperate_chart_indicator'):
-                self.update_separate_indicators(self.current_plot_data.seperate_chart_indicator)
-        
-        # Check stop condition
-        if self.stop_event.is_set():
-            pass
+            # Only update charts if we received new data
+            if new_data_received and len(self.time_data) > 0:
+                self.update_charts()
+                self.update_stats_display()
+                self.update_events_list()
+                self.update_header_status()
+                
+                # Update indicators if available
+                if hasattr(self.current_plot_data, 'overlay_indicator'):
+                    self.update_overlay_indicators(self.current_plot_data.overlay_indicator)
+                if hasattr(self.current_plot_data, 'seperate_chart_indicator'):
+                    self.update_separate_indicators(self.current_plot_data.seperate_chart_indicator)
+            
+            # Check stop condition
+            if self.stop_event.is_set():
+                pass
 
     def update_charts(self):
         """Update all chart displays"""

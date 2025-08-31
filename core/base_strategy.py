@@ -46,52 +46,67 @@ class BaseStrategy(BaseSubscriber):
         self.price_history = deque(maxlen=price_history_size)
 
     def update(self, candle: BaseCandle) -> None:
-        """
-        Update the strategy and backtest stats with a new candle.
-        
-        :param candle: The new candle data to update the strategy with.
-        """
-        # Store price history
-        self.price_history.append({
-            'timestamp': candle.timestamp,
-            'open': candle.open,
-            'high': candle.high,
-            'low': candle.low,
-            'close': candle.close,
-            'volume': getattr(candle, 'volume', 0)
-        })
+            """
+            Update the strategy and backtest stats with a new candle.
+            
+            :param candle: The new candle data to update the strategy with.
+            """
+            # Check if this is an update to existing candle or a new one
+            is_live_update = False
+            if (len(self.price_history) > 0 and 
+                self.price_history[-1]['timestamp'] == candle.timestamp):
+                is_live_update = True
+            
+            # Handle price history for live updates
+            candle_data = {
+                'timestamp': candle.timestamp,
+                'open': candle.open,
+                'high': candle.high,
+                'low': candle.low,
+                'close': candle.close,
+                'volume': getattr(candle, 'volume', 0)
+            }
+            
+            if is_live_update:
+                # Update the last candle in history
+                self.price_history[-1] = candle_data
+            else:
+                # Add new candle to history
+                self.price_history.append(candle_data)
 
-        # Run strategy logic
-        self.on_candle(candle)
-        self.indicator_manager.update_all(candle)
+            # Run strategy logic
+            self.on_candle(candle)
+            
+            # Update indicators (they should handle live updates internally)
+            self.indicator_manager.update_all(candle)
 
-        # Update backtester
-        if self.backtester:
-            self.backtester.update(candle)
+            # Update backtester
+            if self.backtester:
+                self.backtester.update(candle)
 
-            # Send comprehensive plot data if plotting is enabled
-            if self.plot_stats:
-                try:
-                    # Get recent position events
-                    recent_events = self.backtester.get_recent_position_events()
+                # Send comprehensive plot data if plotting is enabled
+                if self.plot_stats:
+                    try:
+                        # Get recent position events
+                        recent_events = self.backtester.get_recent_position_events()
+                        
+                        # Get current position info
+                        current_position = self.position_manager.get_current_position_info()
+                        
+                        # Create comprehensive plot data
+                        plot_data = PlotData(
+                            stats=self.backtester.stats,
+                            candle=candle,
+                            recent_events=recent_events,
+                            current_position=current_position,
+                            overlay_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=False),
+                            seperate_chart_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=True)
+                        )
+                        
+                        self.queue.put_nowait(plot_data)
+                    except Exception:
+                        pass
                     
-                    # Get current position info
-                    current_position = self.position_manager.get_current_position_info()
-                    
-                    # Create comprehensive plot data
-                    plot_data = PlotData(
-                        stats=self.backtester.stats,
-                        candle=candle,
-                        recent_events=recent_events,
-                        current_position=current_position,
-                        overlay_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=False),
-                        seperate_chart_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=True)
-                    )
-                    
-                    self.queue.put_nowait(plot_data)
-                except Exception:
-                    pass
-
     @abstractmethod
     def on_candle(self, candle: BaseCandle) -> None:
         """

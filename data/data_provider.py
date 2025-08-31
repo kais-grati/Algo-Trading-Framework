@@ -116,7 +116,7 @@ class BinanceDataProvider(BaseDataProvider):
             # create a kline socket for the symbol/interval
             ks = bsm.kline_socket(symbol=self.symbol, interval=self.interval)
             async with ks as stream:
-                previous_candle = None
+                # previous_candle = None
                 while True:
                     msg = await stream.recv()
                     if msg is None:
@@ -137,10 +137,10 @@ class BinanceDataProvider(BaseDataProvider):
                         close=float(k.get("c", 0.0)),
                         volume=float(k.get("v", 0.0)),
                     )
-                    if previous_candle and previous_candle.timestamp == candle.timestamp:
-                        continue
+                    # if previous_candle and previous_candle.timestamp == candle.timestamp:
+                    #     continue
                     yield candle
-                    previous_candle = candle
+                    # previous_candle = candle
         finally:
             if client is not None:
                 try:
