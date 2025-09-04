@@ -9,6 +9,7 @@ from datetime import datetime
 from backtesting.candle_item import CandlestickItem
 from backtesting.misc import TimeAxisItem, PlotData, ChartType
 from backtesting.tools import MeasureTool
+from core.indicators import ComplexIndicator
 
 
 class TradingDashboard(Process):
@@ -25,6 +26,7 @@ class TradingDashboard(Process):
         self.overlay_indicator_plots = {}  # Dictionary to store overlay indicator plot items
         self.separate_indicator_plots = {}  # Dictionary to store separate chart indicators
         self.separate_chart_widgets = {}  # Dictionary to store separate chart plot widgets
+        self.complex_indicator_widgets = {}  # Store complex indicator widgets
         self.indicator_colors = [
             '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7',
             '#dda0dd', '#98d8c8', '#fdcb6e', '#6c5ce7', '#a29bfe'
@@ -359,6 +361,33 @@ class TradingDashboard(Process):
         
         # Add main splitter to the parent layout
         parent_layout.addWidget(self.main_splitter)
+
+    def add_complex_indicator_chart(self, indicator: ComplexIndicator, key: str):
+        """Add a complex indicator chart using the indicator's own plotting logic"""
+        try:
+            # Let the complex indicator create its own plot widget
+            plot_widget = indicator.create_plot_widget(self.price_plot_widget)
+            
+            # Add to main splitter
+            self.main_splitter.addWidget(plot_widget)
+            
+            # Store reference
+            self.complex_indicator_widgets[key] = {
+                'widget': plot_widget,
+                'indicator': indicator
+            }
+            
+            # Adjust splitter sizes to accommodate new chart
+            current_sizes = self.main_splitter.sizes()
+            new_size = 150  # Height for indicator chart
+            current_sizes.append(new_size)
+            self.main_splitter.setSizes(current_sizes)
+            
+            return plot_widget
+            
+        except Exception as e:
+            print(f"Error creating complex indicator chart for {key}: {e}")
+            return None
 
     def create_separate_indicator_chart(self, indicator_name: str, title: Optional[str] = None):
         """Create a new chart widget for separate indicators with linked time axis"""

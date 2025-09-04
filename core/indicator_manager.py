@@ -1,12 +1,12 @@
 from collections import deque
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from data import BaseCandle
-from core.indicators import BaseIndicator
+from core.indicators import BaseIndicator, ComplexIndicator, IndicatorValue
 from dataclasses import dataclass
 
 @dataclass
 class IndicatorMeta:
-    indicator: BaseIndicator
+    indicator: Union[BaseIndicator, ComplexIndicator]
     plottable: bool = True
     separate_chart: bool = False
 
@@ -19,15 +19,19 @@ class BaseIndicatorManager:
     
     def add_indicator(
         self,
-        indicator: BaseIndicator,
+        indicator: Union[BaseIndicator, ComplexIndicator],
         plottable: bool = True,
         separate_chart: bool = False,
-        color: Optional[str] = None,
+        color: str = "#FFFFFF",
         alias: Optional[str] = None
     ) -> str:
         key = alias or indicator.name
 
-        indicator.color = color if color else getattr(indicator, 'color', 'FFFFFF')
+        if isinstance(indicator, BaseIndicator) and color:
+            indicator.color = color
+
+        if isinstance(indicator, ComplexIndicator):
+            separate_chart = True
 
         self.indicators[key] = IndicatorMeta(
             indicator=indicator,
@@ -82,20 +86,32 @@ class BaseIndicatorManager:
         return result
     
 
-    def get_indicator(self, key: str) -> Optional[BaseIndicator]:
+    def get_indicator(self, key: str) -> Optional[Union[BaseIndicator, ComplexIndicator]]:
         """Get indicator by key"""
         meta = self.indicators.get(key)
         return meta.indicator if meta else None
 
-    def get_value(self, key: str) -> Any:
+    def get_value(self, key: str) -> Optional[Union[IndicatorValue, Any]]:
         """Get current value of an indicator"""
         indicator = self.get_indicator(key)
-        return indicator.get_current_value() if indicator else None
+        if isinstance(indicator, BaseIndicator):
+            return indicator.get_current_value()
+        elif isinstance(indicator, ComplexIndicator):
+            # Complex indicators don't have a standard value format
+            # Return None or implement custom logic per indicator
+            return None
+        return None
     
     def get_values(self, key: str, n: Optional[int] = None) -> List[Any]:
         """Get historical values of an indicator"""
         indicator = self.get_indicator(key)
-        return indicator.get_values(n) if indicator else []
+        if isinstance(indicator, BaseIndicator):
+            return indicator.get_values(n)
+        elif isinstance(indicator, ComplexIndicator):
+            # For complex indicators, you might want to access specific data
+            # This would depend on the indicator's internal structure
+            return []
+        return []
     
     def is_ready(self, key: str) -> bool:
         """Check if indicator is ready (has enough data)"""
@@ -103,5 +119,11 @@ class BaseIndicatorManager:
         return indicator.is_ready if indicator else False
     
     def get_all_current_values(self) -> Dict[str, Any]:
-        """Get current values of all indicators"""
-        return {key: meta.indicator.get_current_value() for key, meta in self.indicators.items()}
+        """Get current values of all simple indicators"""
+        results = {}
+        for key, meta in self.indicators.items():
+            if isinstance(meta.indicator, BaseIndicator):
+                value = meta.indicator.get_current_value()
+                if value is not None:
+                    results[key] = value
+        return results

@@ -5,7 +5,7 @@ import asyncio, os
 from dotenv import load_dotenv
 from data.base_candle import BaseCandle
 from backtesting.misc import ChartType
-from core.indicators import SMA, VWAP, EMA, MVWAP
+from core.indicators import SMA, VWAP, EMA, MACD
 
 load_dotenv()
 
