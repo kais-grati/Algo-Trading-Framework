@@ -379,7 +379,7 @@ class TradingDashboard(Process):
             
             # Adjust splitter sizes to accommodate new chart
             current_sizes = self.main_splitter.sizes()
-            new_size = 150  # Height for indicator chart
+            new_size = 150
             current_sizes.append(new_size)
             self.main_splitter.setSizes(current_sizes)
             
@@ -483,7 +483,7 @@ class TradingDashboard(Process):
         self.measure_tool.clear_measure()
 
     def update_overlay_indicators(self, overlay_indicators):
-        """Update overlay indicators on the price chart"""
+        """Update overlay indicators on the price chart - now works with BaseIndicator objects"""
         if not overlay_indicators:
             return
             
@@ -493,20 +493,27 @@ class TradingDashboard(Process):
             
         for indicator_name, indicator in overlay_indicators.items():
             try:
-                # Get indicator values
-                values = indicator.get_values()
-                if not values:
-                    continue
-                
-                # Ensure we have enough x data points
-                min_len = min(len(x_data), len(values))
-                if min_len == 0:
-                    continue
-                
-                x_subset = x_data[-min_len:]
-                y_subset = values[-min_len:]
-                
-                self.update_overlay_indicator(indicator_name, indicator.color, x_subset, y_subset)
+                # Get indicator values - now using BaseIndicator interface
+                if hasattr(indicator, 'get_values'):
+                    indicator_values = indicator.get_values()
+                    if not indicator_values:
+                        continue
+                    
+                    # Extract actual values and ensure we have enough data points
+                    values = [iv.value for iv in indicator_values if iv.value is not None]
+                    if not values:
+                        continue
+                        
+                    min_len = min(len(x_data), len(values))
+                    if min_len == 0:
+                        continue
+                    
+                    x_subset = x_data[-min_len:]
+                    y_subset = values[-min_len:]
+                    
+                    # Use indicator's color
+                    color = getattr(indicator, 'color', '#FFFFFF')
+                    self.update_overlay_indicator(indicator_name, color, x_subset, y_subset)
                     
             except Exception as e:
                 print(f"Error updating overlay indicator {indicator_name}: {e}")
@@ -526,7 +533,7 @@ class TradingDashboard(Process):
 
 
     def update_separate_indicators(self, separate_indicators):
-        """Update indicators that require separate charts"""
+        """Update indicators that require separate charts - now works with BaseIndicator objects"""
         if not separate_indicators:
             return
             
@@ -536,27 +543,34 @@ class TradingDashboard(Process):
             
         for indicator_name, indicator in separate_indicators.items():
             try:
-                # Get indicator values
-                values = indicator.get_values()
-                if not values:
-                    continue
-                
-                # Ensure we have enough x data points
-                min_len = min(len(x_data), len(values))
-                if min_len == 0:
-                    continue
-                
-                x_subset = x_data[-min_len:]
-                y_subset = values[-min_len:]
-                
-                # Create chart if it doesn't exist
-                if indicator_name not in self.separate_chart_widgets:
-                    self.create_separate_indicator_chart(indicator_name)
-                
-                plot_widget = self.separate_chart_widgets[indicator_name]
-                
-                self.update_separate_indicator(indicator_name, indicator.color, plot_widget, x_subset, y_subset)
+                # Get indicator values - now using BaseIndicator interface
+                if hasattr(indicator, 'get_values'):
+                    indicator_values = indicator.get_values()
+                    if not indicator_values:
+                        continue
                     
+                    # Extract actual values
+                    values = [iv.value for iv in indicator_values if iv.value is not None]
+                    if not values:
+                        continue
+                        
+                    min_len = min(len(x_data), len(values))
+                    if min_len == 0:
+                        continue
+                    
+                    x_subset = x_data[-min_len:]
+                    y_subset = values[-min_len:]
+                    
+                    # Create chart if it doesn't exist
+                    if indicator_name not in self.separate_chart_widgets:
+                        self.create_separate_indicator_chart(indicator_name)
+                    
+                    plot_widget = self.separate_chart_widgets[indicator_name]
+                    
+                    # Use indicator's color
+                    color = getattr(indicator, 'color', '#FFFFFF')
+                    self.update_separate_indicator(indicator_name, color, plot_widget, x_subset, y_subset)
+                        
             except Exception as e:
                 print(f"Error updating separate indicator {indicator_name}: {e}")
 
@@ -571,17 +585,53 @@ class TradingDashboard(Process):
                 name=indicator_name
             )
             self.separate_indicator_plots[plot_key] = plot_item
-            
-            # Add reference lines for RSI
-            if 'RSI' in indicator_name:
-                # Add 70 and 30 reference lines
-                overbought_line = pg.InfiniteLine(pos=70, angle=0, pen=pg.mkPen(color='#ff4444', style=QtCore.Qt.PenStyle.DashLine))
-                oversold_line = pg.InfiniteLine(pos=30, angle=0, pen=pg.mkPen(color='#00ff88', style=QtCore.Qt.PenStyle.DashLine))
-                plot_widget.addItem(overbought_line)
-                plot_widget.addItem(oversold_line)
         
         # Update plot data
         self.separate_indicator_plots[plot_key].setData(x_data, y_data)
+
+    def update_complex_indicators(self, complex_indicators, x_data):
+        """Updated method: Ensure data synchronization between indicator instances"""
+        if not complex_indicators:
+            return
+                    
+        for indicator_name, current_indicator in complex_indicators.items():
+            if indicator_name in self.complex_indicator_widgets:
+                try:
+                    widget_data = self.complex_indicator_widgets[indicator_name]
+                    stored_indicator = widget_data['indicator']
+                    
+                    # Sync data from current indicator to stored indicator
+                    if hasattr(current_indicator, 'rsi_values') and hasattr(stored_indicator, 'rsi_values'):
+                        stored_indicator.rsi_values = current_indicator.rsi_values
+                        stored_indicator.is_ready = current_indicator.is_ready
+                    
+                    # Update the plot with the stored indicator (which has the plot widgets)
+                    stored_indicator.update_plot(x_data)
+                    
+                except Exception as e:
+                    print(f"Error updating complex indicator {indicator_name}: {e}")
+
+    def add_indicators_from_plot_data(self, plot_data):
+        """Process indicators from PlotData and add missing charts"""
+        # Handle overlay indicators (BaseIndicator objects)
+        if hasattr(plot_data, 'overlay_indicator') and plot_data.overlay_indicator:
+            for indicator_name, indicator in plot_data.overlay_indicator.items():
+                # No special setup needed for overlays, they use the price chart
+                pass
+        
+        # Handle separate chart indicators (BaseIndicator objects)  
+        if hasattr(plot_data, 'seperate_chart_indicator') and plot_data.seperate_chart_indicator:
+            for indicator_name, indicator in plot_data.seperate_chart_indicator.items():
+                # Create separate chart if it doesn't exist
+                if indicator_name not in self.separate_chart_widgets:
+                    self.create_separate_indicator_chart(indicator_name)
+        
+        # Handle complex indicators (ComplexIndicator objects)
+        if hasattr(plot_data, 'complex_indicator') and plot_data.complex_indicator:
+            for indicator_name, indicator in plot_data.complex_indicator.items():
+                # Create complex indicator chart if it doesn't exist
+                if indicator_name not in self.complex_indicator_widgets:
+                    self.add_complex_indicator_chart(indicator, indicator_name)
 
     
 
@@ -708,13 +758,13 @@ class TradingDashboard(Process):
 
 
     def remove_indicator_plots(self, indicator_name):
-        """Remove indicator plots when indicators are removed"""
-        # Remove overlay indicators
+        """Updated method to handle removal of both simple and complex indicators"""
+        # Remove overlay indicators (BaseIndicator)
         if indicator_name in self.overlay_indicator_plots:
             self.price_plot_widget.removeItem(self.overlay_indicator_plots[indicator_name])
             del self.overlay_indicator_plots[indicator_name]
         
-        # Remove separate chart indicators
+        # Remove separate chart indicators (BaseIndicator)
         keys_to_remove = [key for key in self.separate_indicator_plots.keys() if key.startswith(indicator_name)]
         for key in keys_to_remove:
             plot_item = self.separate_indicator_plots[key]
@@ -733,6 +783,14 @@ class TradingDashboard(Process):
             self.main_splitter.removeWidget(widget)
             widget.deleteLater()
             del self.separate_chart_widgets[indicator_name]
+        
+        # Remove complex indicator widgets (ComplexIndicator)
+        if indicator_name in self.complex_indicator_widgets:
+            widget_data = self.complex_indicator_widgets[indicator_name]
+            widget = widget_data['widget']
+            self.main_splitter.removeWidget(widget)
+            widget.deleteLater()
+            del self.complex_indicator_widgets[indicator_name]
 
     def add_position_markers(self, events):
         """Add position markers to price chart with vertical offsets to avoid overlap"""
@@ -817,123 +875,132 @@ class TradingDashboard(Process):
         return f"<span style='color: {color};'>{percentage:.2f}%</span>"
 
     def update_dashboard(self):
-            """Update dashboard with latest data"""
-            new_data_received = False
+        """Updated dashboard method to handle new indicator system"""
+        new_data_received = False
+        
+        # Get all available data from queue
+        while not self.queue.empty():
+            plot_data = self.queue.get_nowait()
+            self.current_plot_data = plot_data
+            new_data_received = True
+
+            # Add indicators and create charts if needed
+            self.add_indicators_from_plot_data(plot_data)
             
-            # Get all available data from queue
-            while not self.queue.empty():
-                plot_data = self.queue.get_nowait()
-                self.current_plot_data = plot_data
-                new_data_received = True
+            # Extract data from PlotData object
+            if hasattr(plot_data, 'to_dict'):
+                data_dict = plot_data.to_dict()
+                stats = plot_data.stats
+                candle = plot_data.candle
+                recent_events = plot_data.recent_events or []
+                current_position = plot_data.current_position
+                overlay_indicators = getattr(plot_data, 'overlay_indicator', {})
+                separate_indicators = getattr(plot_data, 'seperate_chart_indicator', {})
+                complex_indicators = getattr(plot_data, 'complex_indicators', {})
+            else:
+                # Fallback for direct stats objects
+                stats = plot_data
+                candle = None
+                recent_events = []
+                current_position = None
+                overlay_indicators = {}
+                separate_indicators = {}
+                complex_indicators = {}
+            
+            
+            # Store recent events
+            if recent_events:
+                self.recent_events.extend(recent_events)
+            
+            # Add data points for equity/drawdown
+            if hasattr(stats, 'equity'):
+                self.equity_data.append(stats.equity)
                 
-                # Extract data from PlotData object
-                if hasattr(plot_data, 'to_dict'):
-                    data_dict = plot_data.to_dict()
-                    stats = plot_data.stats
-                    candle = plot_data.candle
-                    recent_events = plot_data.recent_events or []
-                    current_position = plot_data.current_position
-                    overlay_indicators = plot_data.overlay_indicator or {}
-                    separate_indicators = plot_data.seperate_chart_indicator or {}
+                # Calculate drawdown from peak
+                if len(self.equity_data) > 0:
+                    peak = max(self.equity_data)
+                    current_dd = peak - stats.equity
+                    self.drawdown_data.append(-current_dd)
                 else:
-                    # Fallback for direct stats objects
-                    stats = plot_data
-                    candle = None
-                    recent_events = []
-                    current_position = None
-                    overlay_indicators = {}
-                    separate_indicators = {}
-                
-                # Store recent events
-                if recent_events:
-                    self.recent_events.extend(recent_events)
-                
-                # Add data points for equity/drawdown
-                if hasattr(stats, 'equity'):
-                    self.equity_data.append(stats.equity)
-                    
-                    # Calculate drawdown from peak
-                    if len(self.equity_data) > 0:
-                        peak = max(self.equity_data)
-                        current_dd = peak - stats.equity
-                        self.drawdown_data.append(-current_dd)
-                    else:
-                        self.drawdown_data.append(0)
-                
-                # Handle candle data with live updates
-                if candle and hasattr(candle, 'timestamp'):
-                    timestamp = candle.timestamp.timestamp()
-                    
-                    # Check if this is an update to existing candle or a new one
-                    is_update = False
-                    if len(self.time_data) > 0 and self.time_data[-1] == timestamp:
-                        is_update = True
-                    
-                    if not is_update:
-                        # New candle - add to time data
-                        self.time_data.append(timestamp)
-                    
-                    # For candlestick charts - handle live OHLC updates
-                    if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
-                        # Create new candle array [timestamp, open, close, low, high]
-                        new_candle = np.array([[
-                            timestamp,
-                            candle.open,
-                            candle.close, 
-                            candle.low,
-                            candle.high
-                        ]])
-                        
-                        if is_update and len(self.candle_buffer) > 0:
-                            # Update the last candle in buffer
-                            self.candle_buffer[-1] = new_candle[0]
-                        else:
-                            # Add new candle to buffer
-                            if len(self.candle_buffer) == 0:
-                                self.candle_buffer = new_candle
-                            else:
-                                self.candle_buffer = np.vstack([self.candle_buffer, new_candle])
-                        
-                        # Keep only last N candles
-                        if len(self.candle_buffer) > self.show_n_candles:
-                            self.candle_buffer = self.candle_buffer[-self.show_n_candles:]
-                            # Also trim time_data to match
-                            while len(self.time_data) > self.show_n_candles:
-                                self.time_data.popleft()
-                    
-                    # For line charts - handle live price updates
-                    elif self.chart_type == ChartType.LINE:
-                        if is_update and len(self.price_data) > 0:
-                            # Update the last price point
-                            self.price_data[-1] = candle.close
-                        else:
-                            # Add new price point
-                            self.price_data.append(candle.close)
-                    
-                    # Handle volume data with live updates
-                    if is_update and len(self.volume_data) > 0:
-                        # Update the last volume point
-                        self.volume_data[-1] = getattr(candle, 'volume', 0)
-                    else:
-                        # Add new volume point
-                        self.volume_data.append(getattr(candle, 'volume', 0))
+                    self.drawdown_data.append(0)
             
-            # Only update charts if we received new data
-            if new_data_received and len(self.time_data) > 0:
-                self.update_charts()
-                self.update_stats_display()
-                self.update_events_list()
-                self.update_header_status()
+            # Handle candle data with live updates (existing logic remains same)
+            if candle and hasattr(candle, 'timestamp'):
+                timestamp = candle.timestamp.timestamp()
                 
-                # Update indicators if available
-                if hasattr(self.current_plot_data, 'overlay_indicator'):
-                    self.update_overlay_indicators(self.current_plot_data.overlay_indicator)
-                if hasattr(self.current_plot_data, 'seperate_chart_indicator'):
-                    self.update_separate_indicators(self.current_plot_data.seperate_chart_indicator)
+                # Check if this is an update to existing candle or a new one
+                is_update = False
+                if len(self.time_data) > 0 and self.time_data[-1] == timestamp:
+                    is_update = True
+                
+                if not is_update:
+                    # New candle - add to time data
+                    self.time_data.append(timestamp)
+                
+                # For candlestick charts - handle live OHLC updates
+                if self.chart_type in [ChartType.CANDLESTICK, ChartType.HOLLOW_CANDLESTICK]:
+                    # Create new candle array [timestamp, open, close, low, high]
+                    new_candle = np.array([[
+                        timestamp,
+                        candle.open,
+                        candle.close, 
+                        candle.low,
+                        candle.high
+                    ]])
+                    
+                    if is_update and len(self.candle_buffer) > 0:
+                        # Update the last candle in buffer
+                        self.candle_buffer[-1] = new_candle[0]
+                    else:
+                        # Add new candle to buffer
+                        if len(self.candle_buffer) == 0:
+                            self.candle_buffer = new_candle
+                        else:
+                            self.candle_buffer = np.vstack([self.candle_buffer, new_candle])
+                    
+                    # Keep only last N candles
+                    if len(self.candle_buffer) > self.show_n_candles:
+                        self.candle_buffer = self.candle_buffer[-self.show_n_candles:]
+                        # Also trim time_data to match
+                        while len(self.time_data) > self.show_n_candles:
+                            self.time_data.popleft()
+                
+                # For line charts - handle live price updates
+                elif self.chart_type == ChartType.LINE:
+                    if is_update and len(self.price_data) > 0:
+                        # Update the last price point
+                        self.price_data[-1] = candle.close
+                    else:
+                        # Add new price point
+                        self.price_data.append(candle.close)
+                
+                # Handle volume data with live updates
+                if is_update and len(self.volume_data) > 0:
+                    # Update the last volume point
+                    self.volume_data[-1] = getattr(candle, 'volume', 0)
+                else:
+                    # Add new volume point
+                    self.volume_data.append(getattr(candle, 'volume', 0))
+        
+        # Only update charts if we received new data
+        if new_data_received and len(self.time_data) > 0:
+            self.update_charts()
+            self.update_stats_display()
+            self.update_events_list()
+            self.update_header_status()
             
-            # Check stop condition
-            if self.stop_event.is_set():
-                pass
+            x_data = list(self.time_data)
+            # Update indicators using new system
+            if hasattr(self.current_plot_data, 'overlay_indicator'):
+                self.update_overlay_indicators(self.current_plot_data.overlay_indicator)
+            if hasattr(self.current_plot_data, 'seperate_chart_indicator'):
+                self.update_separate_indicators(self.current_plot_data.seperate_chart_indicator)
+            if hasattr(self.current_plot_data, 'complex_indicator'):
+                self.update_complex_indicators(self.current_plot_data.complex_indicator, x_data)
+        
+        # Check stop condition
+        if self.stop_event.is_set():
+            pass
 
     def update_charts(self):
         """Update all chart displays"""

@@ -30,8 +30,6 @@ class BaseIndicatorManager:
         if isinstance(indicator, BaseIndicator) and color:
             indicator.color = color
 
-        if isinstance(indicator, ComplexIndicator):
-            separate_chart = True
 
         self.indicators[key] = IndicatorMeta(
             indicator=indicator,
@@ -81,7 +79,7 @@ class BaseIndicatorManager:
         """Return plottable indicators, optionally filtered by chart type"""
         result = {}
         for key, meta in self.indicators.items():
-            if meta.plottable and (separate_chart is None or meta.separate_chart == separate_chart):
+            if meta.plottable and (separate_chart is None or meta.separate_chart == separate_chart) and not isinstance(meta.indicator, ComplexIndicator):
                 result[key] = meta.indicator
         return result
     
@@ -127,3 +125,11 @@ class BaseIndicatorManager:
                 if value is not None:
                     results[key] = value
         return results
+    
+    def get_complex_indicators(self) -> Dict[str, ComplexIndicator]:
+        """Return all complex indicators that manage their own plots"""
+        result = {}
+        for key, meta in self.indicators.items():
+            if isinstance(meta.indicator, ComplexIndicator) and meta.plottable:
+                result[key] = meta.indicator
+        return result

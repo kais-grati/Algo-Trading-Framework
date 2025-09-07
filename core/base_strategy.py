@@ -100,7 +100,8 @@ class BaseStrategy(BaseSubscriber):
                             recent_events=recent_events,
                             current_position=current_position,
                             overlay_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=False),
-                            seperate_chart_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=True)
+                            seperate_chart_indicator_data=self.indicator_manager.get_plottable_indicators(separate_chart=True),
+                            complex_indicator=self.indicator_manager.get_complex_indicators()
                         )
                         
                         self.queue.put_nowait(plot_data)

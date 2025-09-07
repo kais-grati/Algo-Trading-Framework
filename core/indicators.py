@@ -371,7 +371,11 @@ class MACD(ComplexIndicator):
         
         self.fast_ema = EMA(fast_period)
         self.slow_ema = EMA(slow_period)
-        self.signal_ema = EMA(signal_period)
+        
+        # Use a simple signal calculation instead of EMA indicator
+        self.signal_buffer = deque(maxlen=signal_period)
+        self.signal_multiplier = 2 / (signal_period + 1)
+        self.signal_ema_value = None
         
         self.macd_values = deque(maxlen=1000)
         self.signal_values = deque(maxlen=1000)
@@ -423,23 +427,29 @@ class MACD(ComplexIndicator):
         return plot_widget
     
     def update(self, candle_data: Dict) -> bool:
+        # Update both EMAs
         fast_val = self.fast_ema.update(candle_data)
         slow_val = self.slow_ema.update(candle_data)
         
         if fast_val is not None and slow_val is not None:
+            # Calculate MACD line
             macd_line = fast_val.value - slow_val.value
             self.macd_values.append(macd_line)
             
-            # Calculate signal line
-            signal_val = self.signal_ema.update({'close': macd_line})
+            # Calculate signal line using EMA of MACD values
+            if self.signal_ema_value is None:
+                self.signal_ema_value = macd_line
+            else:
+                self.signal_ema_value = (macd_line * self.signal_multiplier) + (self.signal_ema_value * (1 - self.signal_multiplier))
             
-            if signal_val is not None:
-                self.signal_values.append(signal_val.value)
-                histogram = macd_line - signal_val.value
-                self.histogram_values.append(histogram)
-                
-                self.is_ready = True
-                return True
+            self.signal_values.append(self.signal_ema_value)
+            
+            # Calculate histogram
+            histogram = macd_line - self.signal_ema_value
+            self.histogram_values.append(histogram)
+            
+            self.is_ready = True
+            return True
         
         return False
     
@@ -447,7 +457,9 @@ class MACD(ComplexIndicator):
         """Update all MACD plot elements"""
         if not self.is_ready:
             return
-        
+        print(self.macd_values)
+        print(self.fast_ema.get_current_value().value)
+        print(self.slow_ema.get_current_value().value)
         macd_data = list(self.macd_values)
         signal_data = list(self.signal_values)
         histogram_data = list(self.histogram_values)
@@ -467,9 +479,9 @@ class MACD(ComplexIndicator):
             
             # Update histogram
             if 'histogram' in self.plot_items:
-                # Calculate bar width
+                # Calculate bar width based on time intervals
                 if len(x_subset) > 1:
-                    avg_interval = (x_subset[-1] - x_subset[0]) / len(x_subset)
+                    avg_interval = (x_subset[-1] - x_subset[0]) / (len(x_subset) - 1)
                     bar_width = avg_interval * 0.6
                 else:
                     bar_width = 0.8
