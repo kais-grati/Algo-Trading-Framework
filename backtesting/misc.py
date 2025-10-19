@@ -17,7 +17,6 @@ class PlotData:
         self.current_position = current_position
         self.overlay_indicator = overlay_indicator_data or {}
         self.seperate_chart_indicator = seperate_chart_indicator_data or {}
-        self.complex_indicator = complex_indicator or {}
 
     def to_dict(self):
         return {
@@ -34,7 +33,6 @@ class PlotData:
             'current_position': self.current_position,
             'overlay_indicator': self.overlay_indicator,
             'seperate_chart_indicator': self.seperate_chart_indicator,
-            'complex_indicator': self.complex_indicator
         }
     
     def __str__(self):

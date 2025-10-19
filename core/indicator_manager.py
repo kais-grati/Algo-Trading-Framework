@@ -1,12 +1,12 @@
 from collections import deque
 from typing import Dict, List, Optional, Any, Union
 from data import BaseCandle
-from core.indicators import BaseIndicator, ComplexIndicator, IndicatorValue
+from core.indicators import BaseIndicator, IndicatorValue
 from dataclasses import dataclass
 
 @dataclass
 class IndicatorMeta:
-    indicator: Union[BaseIndicator, ComplexIndicator]
+    indicator: BaseIndicator
     plottable: bool = True
     separate_chart: bool = False
 
@@ -19,7 +19,7 @@ class BaseIndicatorManager:
     
     def add_indicator(
         self,
-        indicator: Union[BaseIndicator, ComplexIndicator],
+        indicator: BaseIndicator,
         plottable: bool = True,
         separate_chart: bool = False,
         color: str = "#FFFFFF",
@@ -79,12 +79,12 @@ class BaseIndicatorManager:
         """Return plottable indicators, optionally filtered by chart type"""
         result = {}
         for key, meta in self.indicators.items():
-            if meta.plottable and (separate_chart is None or meta.separate_chart == separate_chart) and not isinstance(meta.indicator, ComplexIndicator):
+            if meta.plottable and (separate_chart is None or meta.separate_chart == separate_chart):
                 result[key] = meta.indicator
         return result
     
 
-    def get_indicator(self, key: str) -> Optional[Union[BaseIndicator, ComplexIndicator]]:
+    def get_indicator(self, key: str) -> Optional[BaseIndicator]:
         """Get indicator by key"""
         meta = self.indicators.get(key)
         return meta.indicator if meta else None
@@ -94,7 +94,7 @@ class BaseIndicatorManager:
         indicator = self.get_indicator(key)
         if isinstance(indicator, BaseIndicator):
             return indicator.get_current_value()
-        elif isinstance(indicator, ComplexIndicator):
+        elif isinstance(indicator):
             # Complex indicators don't have a standard value format
             # Return None or implement custom logic per indicator
             return None
@@ -103,13 +103,7 @@ class BaseIndicatorManager:
     def get_values(self, key: str, n: Optional[int] = None) -> List[Any]:
         """Get historical values of an indicator"""
         indicator = self.get_indicator(key)
-        if isinstance(indicator, BaseIndicator):
-            return indicator.get_values(n)
-        elif isinstance(indicator, ComplexIndicator):
-            # For complex indicators, you might want to access specific data
-            # This would depend on the indicator's internal structure
-            return []
-        return []
+        return indicator.get_values(n)
     
     def is_ready(self, key: str) -> bool:
         """Check if indicator is ready (has enough data)"""
@@ -126,10 +120,3 @@ class BaseIndicatorManager:
                     results[key] = value
         return results
     
-    def get_complex_indicators(self) -> Dict[str, ComplexIndicator]:
-        """Return all complex indicators that manage their own plots"""
-        result = {}
-        for key, meta in self.indicators.items():
-            if isinstance(meta.indicator, ComplexIndicator) and meta.plottable:
-                result[key] = meta.indicator
-        return result

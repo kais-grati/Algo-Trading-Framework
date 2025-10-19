@@ -1,9 +1,7 @@
 from collections import deque
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from abc import ABC, abstractmethod
-import numpy as np
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
+
 
 class IndicatorValue:
     """Simple standardized indicator value for overlay indicators"""
@@ -43,39 +41,8 @@ class BaseIndicator(ABC):
         return list(self.values)[-n:] if len(self.values) >= n else list(self.values)
 
 
-class ComplexIndicator(ABC):
-    """Base class for complex indicators that manage their own plotting"""
-    
-    def __init__(self, name: Optional[str] = None):
-        self.name = name or self.__class__.__name__
-        self.is_ready = False
-        self.chart_type = "separate"  # Complex indicators are separate by default
-        self.plot_widget = None
-        self.plot_items = {}
-        
-    @abstractmethod
-    def update(self, candle_data: Dict) -> bool:
-        """Update indicator and return True if updated successfully"""
-        pass
-    
-    @abstractmethod
-    def create_plot_widget(self, master_plot_widget) -> pg.PlotWidget:
-        """Create and configure the plot widget for this indicator"""
-        pass
-    
-    def get_plot_widget(self, master_plot_widget) -> pg.PlotWidget:
-        """Get or create the plot widget"""
-        if self.plot_widget is None:
-            self.plot_widget = self.create_plot_widget(master_plot_widget)
-        return self.plot_widget
-    
-    @abstractmethod
-    def update_plot(self, time_data: List[float]):
-        """Update the plot with current data"""
-        pass
 
-
-# Simple overlay indicators
+# A few implementations of classical indicators
 class SMA(BaseIndicator):
     """Simple Moving Average - overlay indicator"""
     
@@ -260,337 +227,91 @@ class VWAP(BaseIndicator):
         )
 
 
-# Complex indicators that handle their own plotting
-class RSI(ComplexIndicator):
-    """RSI as a complex indicator that manages its own plot"""
-    
+class RSI(BaseIndicator):
+    """Relative Strength Index (RSI) - momentum indicator"""
+
     def __init__(self, period: int = 14, source: str = 'close'):
-        super().__init__(f"RSI_{period}")
-        self.period = period
+        super().__init__(period, f"RSI_{period}")
         self.source = source
         self.gains = deque(maxlen=period)
         self.losses = deque(maxlen=period)
+        self.avg_gain = None
+        self.avg_loss = None
         self.prev_price = None
-        self.rsi_values = deque(maxlen=1000)
         self.color = "#9B59B6"
-    
-    def create_plot_widget(self, master_plot_widget) -> pg.PlotWidget:
-        """Create RSI plot widget with reference lines"""
-        from backtesting.misc import TimeAxisItem
-        
-        plot_widget = pg.PlotWidget(
-            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
-            title=f"RSI ({self.period})"
-        )
-        plot_widget.setBackground('#2d2d2d')
-        plot_widget.setLabel('left', 'RSI')
-        plot_widget.setLabel('bottom', 'Time')
-        plot_widget.showGrid(x=True, y=True, alpha=0.3)
-        plot_widget.setYRange(0, 100)
-        
-        # Link to master chart
-        plot_widget.setXLink(master_plot_widget)
-        
-        # Add reference lines
-        overbought = pg.InfiniteLine(pos=70, angle=0, pen=pg.mkPen(color='#ff4444', style=QtCore.Qt.PenStyle.DashLine))
-        oversold = pg.InfiniteLine(pos=30, angle=0, pen=pg.mkPen(color='#00ff88', style=QtCore.Qt.PenStyle.DashLine))
-        midline = pg.InfiniteLine(pos=50, angle=0, pen=pg.mkPen(color='#666666', style=QtCore.Qt.PenStyle.DashLine))
-        
-        plot_widget.addItem(overbought)
-        plot_widget.addItem(oversold)
-        plot_widget.addItem(midline)
-        
-        # Add labels
-        overbought_label = pg.TextItem("70", anchor=(0, 0.5), color='#ff4444')
-        oversold_label = pg.TextItem("30", anchor=(0, 0.5), color='#00ff88')
-        overbought_label.setPos(0, 70)
-        oversold_label.setPos(0, 30)
-        plot_widget.addItem(overbought_label)
-        plot_widget.addItem(oversold_label)
-        
-        # Create RSI line plot
-        self.plot_items['rsi_line'] = plot_widget.plot(
-            pen=pg.mkPen(color=self.color, width=2),
-            name="RSI"
-        )
-        
-        return plot_widget
-    
-    def update(self, candle_data: Dict) -> bool:
+        self.chart_type = "oscillator"  # RSI is not an overlay indicator
+
+    def _calculate_rsi(self, avg_gain: float, avg_loss: float) -> float:
+        if avg_loss == 0:
+            return 100.0
+        rs = avg_gain / avg_loss
+        return 100 - (100 / (1 + rs))
+
+    def update(self, candle_data: Dict) -> Optional[IndicatorValue]:
+        """Update RSI with a new candle"""
         price = candle_data[self.source]
-        
-        if self.prev_price is not None:
-            change = price - self.prev_price
-            gain = max(change, 0)
-            loss = max(-change, 0)
-            
-            self.gains.append(gain)
-            self.losses.append(loss)
-            
-            if len(self.gains) >= self.period:
-                avg_gain = sum(self.gains) / len(self.gains)
-                avg_loss = sum(self.losses) / len(self.losses)
-                
-                if avg_loss == 0:
-                    rsi = 100
-                else:
-                    rs = avg_gain / avg_loss
-                    rsi = 100 - (100 / (1 + rs))
-                
-                self.rsi_values.append(rsi)
-                self.is_ready = True
-                self.prev_price = price
-                return True
-        
+
+        # Skip first candle (no previous)
+        if self.prev_price is None:
+            self.prev_price = price
+            return None
+
+        change = price - self.prev_price
+        gain = max(change, 0)
+        loss = abs(min(change, 0))
+
+        self.gains.append(gain)
+        self.losses.append(loss)
         self.prev_price = price
-        return False
-    
-    def update_plot(self, time_data: List[float]):
-        """Update the RSI plot"""
-        if not self.is_ready or not self.plot_items.get('rsi_line'):
-            return
-        
-        rsi_data = list(self.rsi_values)
-        min_len = min(len(time_data), len(rsi_data))
-        
-        if min_len > 0:
-            self.plot_items['rsi_line'].setData(
-                time_data[-min_len:], 
-                rsi_data[-min_len:]
-            )
 
+        # Compute initial averages
+        if len(self.gains) < self.period:
+            return None
 
-class MACD(ComplexIndicator):
-    """MACD as a complex indicator that manages its own plot"""
-    
-    def __init__(self, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9):
-        super().__init__(f"MACD_{fast_period}_{slow_period}_{signal_period}")
-        self.fast_period = fast_period
-        self.slow_period = slow_period
-        self.signal_period = signal_period
-        
-        self.fast_ema = EMA(fast_period)
-        self.slow_ema = EMA(slow_period)
-        
-        # Use a simple signal calculation instead of EMA indicator
-        self.signal_buffer = deque(maxlen=signal_period)
-        self.signal_multiplier = 2 / (signal_period + 1)
-        self.signal_ema_value = None
-        
-        self.macd_values = deque(maxlen=1000)
-        self.signal_values = deque(maxlen=1000)
-        self.histogram_values = deque(maxlen=1000)
-        
-        self.colors = {
-            'macd': '#2E86C1',
-            'signal': '#E74C3C', 
-            'histogram': '#F39C12'
-        }
-    
-    def create_plot_widget(self, master_plot_widget) -> pg.PlotWidget:
-        """Create MACD plot widget with multiple series"""
-        from backtesting.misc import TimeAxisItem
-        
-        plot_widget = pg.PlotWidget(
-            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
-            title=f"MACD ({self.fast_period}, {self.slow_period}, {self.signal_period})"
-        )
-        plot_widget.setBackground('#2d2d2d')
-        plot_widget.setLabel('left', 'MACD')
-        plot_widget.setLabel('bottom', 'Time')
-        plot_widget.showGrid(x=True, y=True, alpha=0.3)
-        
-        # Link to master chart
-        plot_widget.setXLink(master_plot_widget)
-        
-        # Add zero line
-        zero_line = pg.InfiniteLine(pos=0, angle=0, pen=pg.mkPen(color='#666666', style=QtCore.Qt.PenStyle.DashLine))
-        plot_widget.addItem(zero_line)
-        
-        # Create plot items
-        self.plot_items['macd_line'] = plot_widget.plot(
-            pen=pg.mkPen(color=self.colors['macd'], width=2),
-            name="MACD"
-        )
-        
-        self.plot_items['signal_line'] = plot_widget.plot(
-            pen=pg.mkPen(color=self.colors['signal'], width=2),
-            name="Signal"
-        )
-        
-        self.plot_items['histogram'] = pg.BarGraphItem(
-            x=[], height=[], width=0.8, 
-            brush=self.colors['histogram']
-        )
-        plot_widget.addItem(self.plot_items['histogram'])
-        
-        return plot_widget
-    
-    def update(self, candle_data: Dict) -> bool:
-        # Update both EMAs
-        fast_val = self.fast_ema.update(candle_data)
-        slow_val = self.slow_ema.update(candle_data)
-        
-        if fast_val is not None and slow_val is not None:
-            # Calculate MACD line
-            macd_line = fast_val.value - slow_val.value
-            self.macd_values.append(macd_line)
-            
-            # Calculate signal line using EMA of MACD values
-            if self.signal_ema_value is None:
-                self.signal_ema_value = macd_line
-            else:
-                self.signal_ema_value = (macd_line * self.signal_multiplier) + (self.signal_ema_value * (1 - self.signal_multiplier))
-            
-            self.signal_values.append(self.signal_ema_value)
-            
-            # Calculate histogram
-            histogram = macd_line - self.signal_ema_value
-            self.histogram_values.append(histogram)
-            
-            self.is_ready = True
-            return True
-        
-        return False
-    
-    def update_plot(self, time_data: List[float]):
-        """Update all MACD plot elements"""
-        if not self.is_ready:
-            return
-        print(self.macd_values)
-        print(self.fast_ema.get_current_value().value)
-        print(self.slow_ema.get_current_value().value)
-        macd_data = list(self.macd_values)
-        signal_data = list(self.signal_values)
-        histogram_data = list(self.histogram_values)
-        
-        min_len = min(len(time_data), len(macd_data), len(signal_data), len(histogram_data))
-        
-        if min_len > 0:
-            x_subset = time_data[-min_len:]
-            
-            # Update MACD line
-            if 'macd_line' in self.plot_items:
-                self.plot_items['macd_line'].setData(x_subset, macd_data[-min_len:])
-            
-            # Update signal line
-            if 'signal_line' in self.plot_items:
-                self.plot_items['signal_line'].setData(x_subset, signal_data[-min_len:])
-            
-            # Update histogram
-            if 'histogram' in self.plot_items:
-                # Calculate bar width based on time intervals
-                if len(x_subset) > 1:
-                    avg_interval = (x_subset[-1] - x_subset[0]) / (len(x_subset) - 1)
-                    bar_width = avg_interval * 0.6
-                else:
-                    bar_width = 0.8
-                
-                self.plot_items['histogram'].setOpts(
-                    x=x_subset,
-                    height=histogram_data[-min_len:],
-                    width=bar_width
-                )
+        if self.avg_gain is None:
+            self.avg_gain = sum(self.gains) / self.period
+            self.avg_loss = sum(self.losses) / self.period
+        else:
+            # Wilder's smoothing method
+            self.avg_gain = ((self.avg_gain * (self.period - 1)) + gain) / self.period
+            self.avg_loss = ((self.avg_loss * (self.period - 1)) + loss) / self.period
 
+        rsi_value = self._calculate_rsi(self.avg_gain, self.avg_loss)
 
-class StochasticOscillator(ComplexIndicator):
-    """Stochastic Oscillator as a complex indicator"""
-    
-    def __init__(self, k_period: int = 14, d_period: int = 3):
-        super().__init__(f"Stoch_{k_period}_{d_period}")
-        self.k_period = k_period
-        self.d_period = d_period
-        self.candle_buffer = deque(maxlen=k_period)
-        self.k_values = deque(maxlen=1000)
-        self.d_values = deque(maxlen=1000)
-        self.k_buffer = deque(maxlen=d_period)
-        
-        self.colors = {
-            'k': '#3498DB',
-            'd': '#E74C3C'
-        }
-    
-    def create_plot_widget(self, master_plot_widget) -> pg.PlotWidget:
-        """Create Stochastic plot widget"""
-        from backtesting.misc import TimeAxisItem
-        
-        plot_widget = pg.PlotWidget(
-            axisItems={'bottom': TimeAxisItem(orientation='bottom')},
-            title=f"Stochastic ({self.k_period}, {self.d_period})"
+        indicator_value = IndicatorValue(
+            value=rsi_value,
+            timestamp=candle_data.get('timestamp'),
+            color=self.color,
+            metadata={'period': self.period, 'source': self.source}
         )
-        plot_widget.setBackground('#2d2d2d')
-        plot_widget.setLabel('left', 'Stochastic %')
-        plot_widget.setLabel('bottom', 'Time')
-        plot_widget.showGrid(x=True, y=True, alpha=0.3)
-        plot_widget.setYRange(0, 100)
-        
-        # Link to master chart
-        plot_widget.setXLink(master_plot_widget)
-        
-        # Add reference lines
-        overbought = pg.InfiniteLine(pos=80, angle=0, pen=pg.mkPen(color='#ff4444', style=QtCore.Qt.PenStyle.DashLine))
-        oversold = pg.InfiniteLine(pos=20, angle=0, pen=pg.mkPen(color='#00ff88', style=QtCore.Qt.PenStyle.DashLine))
-        plot_widget.addItem(overbought)
-        plot_widget.addItem(oversold)
-        
-        # Create plot lines
-        self.plot_items['k_line'] = plot_widget.plot(
-            pen=pg.mkPen(color=self.colors['k'], width=2),
-            name="%K"
+
+        self.values.append(indicator_value)
+        self.is_ready = True
+        return indicator_value
+
+    def calculate(self, candles: List[Dict]) -> Optional[IndicatorValue]:
+        """Calculate RSI from historical candles"""
+        if len(candles) < self.period + 1:
+            return None
+
+        prices = [c[self.source] for c in candles]
+        deltas = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
+
+        gains = [max(d, 0) for d in deltas]
+        losses = [abs(min(d, 0)) for d in deltas]
+
+        avg_gain = sum(gains[:self.period]) / self.period
+        avg_loss = sum(losses[:self.period]) / self.period
+
+        # Apply Wilder's smoothing for the rest
+        for i in range(self.period, len(gains)):
+            avg_gain = ((avg_gain * (self.period - 1)) + gains[i]) / self.period
+            avg_loss = ((avg_loss * (self.period - 1)) + losses[i]) / self.period
+
+        rsi_value = self._calculate_rsi(avg_gain, avg_loss)
+
+        return IndicatorValue(
+            value=rsi_value,
+            color=self.color,
+            metadata={'period': self.period, 'source': self.source}
         )
-        
-        self.plot_items['d_line'] = plot_widget.plot(
-            pen=pg.mkPen(color=self.colors['d'], width=2),
-            name="%D"
-        )
-        
-        return plot_widget
-    
-    def update(self, candle_data: Dict) -> bool:
-        self.candle_buffer.append(candle_data)
-        
-        if len(self.candle_buffer) >= self.k_period:
-            # Calculate %K
-            highs = [c['high'] for c in self.candle_buffer]
-            lows = [c['low'] for c in self.candle_buffer]
-            current_close = candle_data['close']
-            
-            highest_high = max(highs)
-            lowest_low = min(lows)
-            
-            if highest_high != lowest_low:
-                k_value = ((current_close - lowest_low) / (highest_high - lowest_low)) * 100
-            else:
-                k_value = 50
-            
-            self.k_values.append(k_value)
-            self.k_buffer.append(k_value)
-            
-            # Calculate %D (SMA of %K)
-            if len(self.k_buffer) >= self.d_period:
-                d_value = sum(self.k_buffer) / len(self.k_buffer)
-                self.d_values.append(d_value)
-                self.is_ready = True
-                return True
-        
-        return False
-    
-    def update_plot(self, time_data: List[float]):
-        """Update Stochastic plot"""
-        if not self.is_ready:
-            return
-        
-        k_data = list(self.k_values)
-        d_data = list(self.d_values)
-        
-        # Update %K line
-        if k_data and 'k_line' in self.plot_items:
-            min_len = min(len(time_data), len(k_data))
-            if min_len > 0:
-                self.plot_items['k_line'].setData(time_data[-min_len:], k_data[-min_len:])
-        
-        # Update %D line
-        if d_data and 'd_line' in self.plot_items:
-            min_len = min(len(time_data), len(d_data))
-            if min_len > 0:
-                self.plot_items['d_line'].setData(time_data[-min_len:], d_data[-min_len:])
