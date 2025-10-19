@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from core.positions import Position, Order, PositionSide, PositionStatus
+from core.position import Position, Order, PositionSide, PositionStatus
 from data.base_candle import BaseCandle
 from typing import List, Optional, Tuple, Dict, Any
 from uuid import uuid4
