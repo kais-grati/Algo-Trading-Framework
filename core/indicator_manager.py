@@ -92,13 +92,7 @@ class BaseIndicatorManager:
     def get_value(self, key: str) -> Optional[Union[IndicatorValue, Any]]:
         """Get current value of an indicator"""
         indicator = self.get_indicator(key)
-        if isinstance(indicator, BaseIndicator):
-            return indicator.get_current_value()
-        elif isinstance(indicator):
-            # Complex indicators don't have a standard value format
-            # Return None or implement custom logic per indicator
-            return None
-        return None
+        return indicator.get_current_value()
     
     def get_values(self, key: str, n: Optional[int] = None) -> List[Any]:
         """Get historical values of an indicator"""

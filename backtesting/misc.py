@@ -10,7 +10,7 @@ class TimeAxisItem(AxisItem):
 @dataclass
 class PlotData:
     """Data structure for sending comprehensive plotting information."""
-    def __init__(self, stats, candle, recent_events=None, current_position=None, overlay_indicator_data=None, seperate_chart_indicator_data=None, complex_indicator=None):
+    def __init__(self, stats, candle, recent_events=None, current_position=None, overlay_indicator_data=None, seperate_chart_indicator_data=None):
         self.stats = stats
         self.candle = candle
         self.recent_events = recent_events or []
@@ -36,7 +36,7 @@ class PlotData:
         }
     
     def __str__(self):
-        return f"PlotData(stats={self.stats}, candle={self.candle}, recent_events={self.recent_events}, current_position={self.current_position}, overlay_indicator={self.overlay_indicator}, seperate_chart_indicator={self.seperate_chart_indicator}, complex_indicator={self.complex_indicator})"
+        return f"PlotData(stats={self.stats}, candle={self.candle}, recent_events={self.recent_events}, current_position={self.current_position}, overlay_indicator={self.overlay_indicator}, seperate_chart_indicator={self.seperate_chart_indicator})"
     
 class ChartType(Enum):
     CANDLESTICK = 1

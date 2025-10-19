@@ -73,13 +73,15 @@ class BasePositionManager:
         """
         Open or increase a long position.
         Order can be placed either using monetary value (ie. 200$) => value param. or using asset quantity (ie. 2 BTC) => qty param.
+        For tp and sl the format of the tuples should be (trigger_price, percent)
         """
         if value:
             quantity = value / candle.close
         elif qty:
             quantity = qty
         else:
-            raise ValueError("Can't place an order without specifying quantity or value")
+            print("Can't place an order without specifying quantity or value")
+            return
             
         order = Order(
             order_id=str(uuid4()),
@@ -104,12 +106,13 @@ class BasePositionManager:
                 self._record_event(event)
                 return
             else:
-                raise ValueError("A position of opposite side is already open.")
-            
+                print("A position of opposite side is already open.")
+                return
         # Convert tp/sl percentages into quantity
-        tp = [(price, percent * quantity) for (price, percent) in tp]
-        sl = [(price, percent * quantity) for (price, percent) in sl]
+        tp = [(price, percent * quantity) for price, percent in tp]
+        sl = [(price, percent * quantity) for price, percent in sl]
 
+        
         pos = Position.long(tp=tp, sl=sl)
         pos.apply_fill(order, is_entry=True)
         self.position = pos
@@ -137,7 +140,8 @@ class BasePositionManager:
         elif qty:
             quantity = qty
         else:
-            raise ValueError("Can't place an order without specifying quantity or value")
+            print("Can't place an order without specifying quantity or value")
+            return
             
         order = Order(
             order_id=str(uuid4()),
@@ -162,7 +166,8 @@ class BasePositionManager:
                 self._record_event(event)
                 return
             else:
-                raise ValueError("A position of opposite side is already open.")
+                print("A position of opposite side is already open.")
+                return
             
         # Convert tp/sl percentages into quantity
         tp = [(price, percent * quantity) for (price, percent) in tp]
@@ -200,8 +205,9 @@ class BasePositionManager:
             close_qty = self.position.qty 
             
         if close_qty <= 0:
-            raise ValueError("Close quantity must be positive.")
-
+            print("Close quantity must be positive.")
+            return
+        
         order = Order(
             order_id=str(uuid4()),
             price=candle.close,

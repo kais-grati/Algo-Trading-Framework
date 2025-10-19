@@ -45,6 +45,7 @@ class Position:
             total_cost = self.avg_price * self.qty + order.price * order.quantity
             self.qty += order.quantity
             self.avg_price = total_cost / self.qty if self.qty else 0.0
+            self.update_tp_sl_levels()
             self.entry_orders.append(order)
         else:
             # reduce/close -> compute realized pnl
@@ -58,6 +59,8 @@ class Position:
             if self.qty <= 0:
                 self.state = PositionStatus.CLOSED
                 self.qty = 0.0
+            else:
+                self.update_tp_sl_levels()
 
     def compute_upnl(self, market_price: float) -> float:
         """Return unrealized PnL against market price (not changing state)."""
@@ -67,6 +70,10 @@ class Position:
         if self.side == PositionSide.SHORT:
             unreal = -unreal
         return unreal
+    
+    def update_tp_sl_levels(self):
+        self.tp = [(price, percent * self.qty) for price, percent in self.tp]
+        self.sl = [(price, percent * self.qty) for price, percent in self.sl]
     
     @staticmethod
     def short(tp: Optional[List[Tuple[float, float]]] = None,

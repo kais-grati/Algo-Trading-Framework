@@ -161,7 +161,7 @@ class TradingDashboard(Process):
     def create_header(self, parent_layout):
         """Create header with title, status, and measure controls"""
         header_widget = QtWidgets.QWidget()
-        header_widget.setMaximumHeight(100)
+        header_widget.setMaximumHeight(120)
         header_layout = QtWidgets.QHBoxLayout(header_widget)
         
         # Title
@@ -198,7 +198,7 @@ class TradingDashboard(Process):
         parent_layout.addWidget(header_widget)
 
     def create_legend_widget(self):
-        """Create a legend widget for position markers using actual scatter plot items"""
+        """Create a legend widget for position markers"""
         legend_widget = QtWidgets.QWidget()
         legend_layout = QtWidgets.QHBoxLayout(legend_widget)
         legend_layout.setContentsMargins(10, 5, 10, 5)
@@ -532,8 +532,9 @@ class TradingDashboard(Process):
         self.current_equity_label = QtWidgets.QLabel("Current Equity: $0.00")
         self.profit_factor_label = QtWidgets.QLabel("Profit Factor: 0.00")
         self.max_drawdown_label = QtWidgets.QLabel("Max Drawdown: $0.00")
+        self.sharpe_r_label = QtWidgets.QLabel("Sharpe Ratio: Not enough data")
         
-        for label in [self.total_pnl_label, self.current_equity_label, self.profit_factor_label, self.max_drawdown_label]:
+        for label in [self.total_pnl_label, self.current_equity_label, self.profit_factor_label, self.max_drawdown_label, self.sharpe_r_label]:
             label.setStyleSheet("margin: 3px; padding: 2px; font-size: 11px;")
             perf_layout.addWidget(label)
         
@@ -646,18 +647,18 @@ class TradingDashboard(Process):
                 else:
                     x_val = float(timestamp)
 
-                # Vertical offset
+                # Vertical offset in percentage
                 offset = 0
                 if event_type in ['open_long', 'open_short']:
                     offset = 0.0   
                 elif event_type in ['close_full', 'close_partial']:
-                    offset = 0.2
+                    offset = 0.0
                 elif event_type in ['tp_hit', 'sl_hit']:
-                    offset = 0.4
+                    offset = 0.01
                 elif event_type in ['increase_long', 'increase_short']:
-                    offset = 0.6
+                    offset = 0.01
 
-                y_val = price + offset  # shift marker above candle
+                y_val = price * (1 + offset)  # shift marker above candle
 
 
                 marker_styles = {
@@ -691,7 +692,7 @@ class TradingDashboard(Process):
                     self.position_markers.append(scatter)
 
             except Exception:
-                continue
+                print("Error while adding position marker on plot")
 
     def format_currency(self, value):
         """Format currency with color coding"""
@@ -916,7 +917,7 @@ class TradingDashboard(Process):
             self.last_update_label.setText(f"Last Update: {datetime.now().strftime('%H:%M:%S')}")
             
         except Exception:
-            pass
+            print("Error while uppdate headers in GUI")
 
     def update_events_list(self):
         """Update recent events list"""
@@ -957,7 +958,7 @@ class TradingDashboard(Process):
                 self.events_list.addItem(item)
                 
         except Exception:
-            pass
+            print("Error while updating event list in GUI")
 
     def update_stats_display(self):
         """Update all statistics labels"""
@@ -1000,6 +1001,7 @@ class TradingDashboard(Process):
             # Performance Overview
             self.total_pnl_label.setText(f"Total P&L: {self.format_currency(stats.total_pnl)}")
             self.current_equity_label.setText(f"Current Equity: {self.format_currency(stats.equity)}")
+            self.sharpe_r_label.setText(f"Sharpe Ratio: {stats.sharpe_ratio:.2f}")
             
             pf_color = "#00ff88" if stats.profit_factor >= 1.5 else "#ffaa00" if stats.profit_factor >= 1.0 else "#ff4444"
             self.profit_factor_label.setText(f"Profit Factor: <span style='color: {pf_color};'>{stats.profit_factor:.2f}</span>")
@@ -1036,7 +1038,7 @@ class TradingDashboard(Process):
             self.short_winrate_label.setText(f"Short Win Rate: {self.format_percentage(stats.short_winrate)}")
             
         except Exception as e:
-            pass  # Handle any attribute errors gracefully
+            print("Error while updating stats in GUI")
 
 
     def update_separate_indicators(self, separate_indicators):

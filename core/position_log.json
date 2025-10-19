@@ -1,1 +1,60 @@
-{"orders": [], "closed_positions": []}
+{
+  "orders": [
+    {
+      "order_id": "0483ab19-63e2-405f-8ae8-db1070a98969",
+      "price": 0.5669,
+      "quantity": 10,
+      "timestamp": "2025-10-19 21:27:47.133858",
+      "fees": 0
+    },
+    {
+      "order_id": "a29cb3df-9024-4c1a-b7ec-3e86bf38fb4e",
+      "price": 0.5818,
+      "quantity": 10.0,
+      "timestamp": "2025-10-19 21:28:01.997358",
+      "fees": 0.0
+    }
+  ],
+  "closed_positions": [
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5669,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "0483ab19-63e2-405f-8ae8-db1070a98969",
+          "price": 0.5669,
+          "quantity": 10,
+          "timestamp": "2025-10-19 21:27:47.133858",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "a29cb3df-9024-4c1a-b7ec-3e86bf38fb4e",
+          "price": 0.5818,
+          "quantity": 10.0,
+          "timestamp": "2025-10-19 21:28:01.997358",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 0.14900000000000024,
+      "tp": [
+        [
+          0.58,
+          100.0
+        ]
+      ],
+      "sl": [
+        [
+          0.0,
+          100.0
+        ]
+      ],
+      "reached_tp": true,
+      "reached_sl": false
+    }
+  ]
+}

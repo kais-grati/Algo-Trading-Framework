@@ -105,7 +105,7 @@ class BaseStrategy(BaseSubscriber):
                         
                         self.queue.put_nowait(plot_data)
                     except Exception:
-                        pass
+                        print("Error while sending data to GUI")
                     
     @abstractmethod
     def on_candle(self, candle: BaseCandle) -> None:

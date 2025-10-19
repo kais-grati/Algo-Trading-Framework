@@ -48,6 +48,8 @@ class BaseBacktestStats:
     max_win_streak: int = 0  # longest streak of consecutive winning positions (count)
     max_loss_streak: int = 0  # longest streak of consecutive losing positions (count)
 
+    sharpe_ratio: float = 0.0  # risk-adjusted return (Sharpe ratio)
+
     exposure_time: float = 0.0  # total time spent with an open position (hours)
     avg_position_duration: float = 0.0  # average position holding time (hours)
 
@@ -152,6 +154,7 @@ class BaseBacktestStats:
         # Max drawdown with color coding
         lines.append(format_metric("Max Drawdown", -self.max_drawdown, is_currency=True))
         lines.append(format_metric("Peak equity", self.peak_equity, is_currency=True))
+        lines.append(format_metric("Sharpe Ratio", self.sharpe_ratio))
         
         lines.append(format_metric("Max Single Win", self.max_win, is_currency=True))
         lines.append(format_metric("Max Single Loss", self.max_loss, is_currency=True))
@@ -175,6 +178,7 @@ class BaseBacktester():
         self.w_streak = 0
         self.l_streak = 0
         self.peak_equity = 0.0
+        self._pnl_history = deque(maxlen=100)  # store rolling realized PnL for Sharpe ratio
 
         # Equity logging
         self.equity_log_file = Path(equity_log_file)
@@ -277,6 +281,25 @@ class BaseBacktester():
                 self.stats.max_win_streak = max(self.stats.max_win_streak, self.w_streak)
                 self.stats.max_loss_streak = max(self.stats.max_loss_streak, self.l_streak)
                 self.stats.total_pnl += pos.realized_pnl
+
+                # --- Update Sharpe ratio based on realized PnL changes ---
+                self._pnl_history.append(self.stats.total_pnl)
+
+                if len(self._pnl_history) > 2:
+                    returns = [
+                        (self._pnl_history[i] - self._pnl_history[i - 1]) / abs(self._pnl_history[i - 1])
+                        for i in range(1, len(self._pnl_history))
+                        if self._pnl_history[i - 1] != 0
+                    ]
+
+                    if len(returns) > 1:
+                        avg_return = sum(returns) / len(returns)
+                        variance = sum((r - avg_return) ** 2 for r in returns) / (len(returns) - 1)
+                        std_dev = variance ** 0.5
+                        self.stats.sharpe_ratio = (avg_return / std_dev) * (len(returns) ** 0.5) if std_dev > 0 else 0.0
+                    else:
+                        self.stats.sharpe_ratio = 0.0
+
                 self.stats.avg_win = self.stats.gross_profit / self.stats.position_wins if self.stats.position_wins > 0 else 0.0
                 self.stats.avg_loss = self.stats.gross_loss / self.stats.position_losses if self.stats.position_losses > 0 else 0.0
 
