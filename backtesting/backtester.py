@@ -3,8 +3,7 @@ from data.base_candle import BaseCandle
 from data.data_provider import BaseDataProvider, BaseSubscriber
 from dataclasses import dataclass, field, asdict
 from colorama import Fore, Style
-import csv
-import time
+import numpy as np
 from pathlib import Path
 from collections import deque
 
@@ -172,37 +171,19 @@ class BaseBacktestStats:
 
 
 class BaseBacktester():
-    def __init__(self, position_manager: BasePositionManager, equity_log_file: str = "equity_log.csv", flush_interval: int = 2):
+    def __init__(self, position_manager: BasePositionManager):
         self.position_manager = position_manager
         self.stats = BaseBacktestStats()
         self.w_streak = 0
         self.l_streak = 0
         self.peak_equity = 0.0
-        self._pnl_history = deque(maxlen=100)  # store rolling realized PnL for Sharpe ratio
+        
+        # store rolling realized PnL for Sharpe ratio
+        self._MAX_LEN = 100
+        self._pnl_history = np.zeros(self._MAX_LEN) 
+        self._pos = 0
+        # _________________________________________
 
-        # Equity logging
-        self.equity_log_file = Path(equity_log_file)
-        self.flush_interval = flush_interval
-        self._equity_buffer = []
-        self._last_flush = time.time()
-
-        if not self.equity_log_file.exists():
-            with open(self.equity_log_file, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["timestamp", "equity"])
-
-    def _log_equity(self, equity: float):
-        """Buffer equity value and flush to disk periodically."""
-        ts = time.time()
-        self._equity_buffer.append((ts, equity))
-
-        # Flush based on buffer size or every 5s
-        if len(self._equity_buffer) >= self.flush_interval or (time.time() - self._last_flush > 5):
-            with open(self.equity_log_file, "a", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerows(self._equity_buffer)
-            self._equity_buffer.clear()
-            self._last_flush = time.time()
             
     def update(self, candle: BaseCandle) -> None:
         pos = self.position_manager.position
@@ -283,22 +264,25 @@ class BaseBacktester():
                 self.stats.total_pnl += pos.realized_pnl
 
                 # --- Update Sharpe ratio based on realized PnL changes ---
-                self._pnl_history.append(self.stats.total_pnl)
+                self._pnl_history[pos % self._MAX_LEN] = self.stats.total_pnl
+                self._pos += 1
 
-                if len(self._pnl_history) > 2:
-                    returns = [
-                        (self._pnl_history[i] - self._pnl_history[i - 1]) / abs(self._pnl_history[i - 1])
-                        for i in range(1, len(self._pnl_history))
-                        if self._pnl_history[i - 1] != 0
-                    ]
+                # --- Vectorized Sharpe ratio calculation ---
+                if self._pos > 1:
+                    # Take the filled portion of the PnL history
+                    pnl_history = self._pnl_history[:min(self._pos, self._MAX_LEN)]
 
-                    if len(returns) > 1:
-                        avg_return = sum(returns) / len(returns)
-                        variance = sum((r - avg_return) ** 2 for r in returns) / (len(returns) - 1)
-                        std_dev = variance ** 0.5
-                        self.stats.sharpe_ratio = (avg_return / std_dev) * (len(returns) ** 0.5) if std_dev > 0 else 0.0
+                    returns = np.diff(pnl_history) / np.abs(pnl_history[:-1])
+                    returns = returns[~np.isnan(returns) & ~np.isinf(returns)]
+
+                    if returns.size > 1:
+                        avg_return = returns.mean()
+                        std_dev = returns.std(ddof=1)
+                        self.stats.sharpe_ratio = (avg_return / std_dev) * np.sqrt(len(returns)) if std_dev > 0 else 0.0
                     else:
+                        print("here")
                         self.stats.sharpe_ratio = 0.0
+
 
                 self.stats.avg_win = self.stats.gross_profit / self.stats.position_wins if self.stats.position_wins > 0 else 0.0
                 self.stats.avg_loss = self.stats.gross_loss / self.stats.position_losses if self.stats.position_losses > 0 else 0.0
@@ -325,7 +309,6 @@ class BaseBacktester():
         drawdown = self.stats.peak_equity - equity
         self.stats.max_drawdown = max(self.stats.max_drawdown, drawdown)
 
-        self._log_equity(equity)
 
     def get_recent_position_events(self):
         """Get recent position events for plotting."""

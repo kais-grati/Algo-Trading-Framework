@@ -23,6 +23,7 @@ class BasePositionManager:
         self.recent_events = deque(maxlen=event_history_size)  # Recent events buffer for plotting
         self.event_counter = 0
 
+
     def _log_order(self, order: Order):
         log = json.loads(self.log_path.read_text())
         log["orders"].append(asdict(order))
@@ -129,6 +130,7 @@ class BasePositionManager:
                                  stop_loss_levels=len(sl),
                                  order_id=order.order_id)
         self._record_event(event)
+
 
     def short(self, candle: BaseCandle, value: Optional[float] = None, qty: Optional[float] = None, tp: List[Tuple[float, float]] = [], sl: List[Tuple[float, float]] = [], fees: float = 0) -> None:
         """
@@ -306,6 +308,14 @@ class BasePositionManager:
     @property
     def has_position(self) -> bool:
         return self.position is not None and self.position.qty != 0
+    
+    @property
+    def is_long(self) -> bool:
+        return True if self.position and self.position.side == PositionSide.LONG else False   
+    
+    @property
+    def is_short(self) -> bool:
+        return True if self.position and self.position.side == PositionSide.SHORT else False
     
     def set_hit_take_profit(self) -> None:
         """Set a take-profit flag for the current position."""

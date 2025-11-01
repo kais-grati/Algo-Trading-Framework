@@ -84,7 +84,6 @@ class BaseStrategy(BaseSubscriber):
             if self.backtester:
                 self.backtester.update(candle)
 
-                # Send comprehensive plot data if plotting is enabled
                 if self.plot_stats:
                     try:
                         # Get recent position events
@@ -93,7 +92,6 @@ class BaseStrategy(BaseSubscriber):
                         # Get current position info
                         current_position = self.position_manager.get_current_position_info()
                         
-                        # Create comprehensive plot data
                         plot_data = PlotData(
                             stats=self.backtester.stats,
                             candle=candle,

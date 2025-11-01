@@ -20,15 +20,12 @@ class BaseSubscriber(ABC):
     :param candle: The new candle data to update the strategy with.
     """    
     async def async_update(self, candle: BaseCandle) -> None:
+        """Async update - runs strategy logic in thread pool"""
         await asyncio.to_thread(self.update, candle)
 
-    """
-    Synchronous update method for strategies that do not require async handling.
-    
-    :param candle: The new candle data to update the strategy with.
-    """
     def update(self, candle: BaseCandle) -> None:
-        raise NotImplementedError("Sync update not implemented")
+        """Synchronous update - override in subclass"""
+        pass
 
     """Called when data stream finishes"""
     async def on_stream_end(self) -> None:
@@ -46,17 +43,19 @@ class BaseDataProvider(ABC):
         self._subscribers.remove(strategy)
     
     async def notify(self, candle: BaseCandle) -> None:
-        """Async notification - can handle async strategies"""
-        tasks = []
-        for subscriber in self._subscribers:
-            try:
-                tasks.append(subscriber.async_update(candle))
-            except NotImplementedError:
-                tasks.append(asyncio.create_task(
-                    asyncio.to_thread(subscriber.update, candle)
-                ))
+        """Async notification - runs all subscriber updates concurrently"""
+        tasks = [
+            subscriber.async_update(candle) 
+            for subscriber in self._subscribers
+        ]
         
-        await asyncio.gather(*tasks, return_exceptions=True)
+        # Run all updates concurrently and catch any exceptions
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Optional: log any exceptions
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                print(f"Error in subscriber {i}: {result}")
     
     @abstractmethod
     async def stream_data(self) -> AsyncGenerator[BaseCandle, None]:

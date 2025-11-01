@@ -1,12 +1,2011 @@
 {
   "orders": [
     {
-      "order_id": "743da573-41f8-4d4e-8cb8-90f387e136a0",
-      "price": 0.5669,
-      "quantity": 10,
-      "timestamp": "2025-10-19 22:01:41.072628",
+      "order_id": "52845743-ab8c-4ad7-9ed8-42c225b218cb",
+      "price": 0.5662,
+      "quantity": 1766.1603673613563,
+      "timestamp": "2025-11-01 14:36:41.504778",
+      "fees": 0
+    },
+    {
+      "order_id": "28eaf290-c7ba-4276-b265-4a4197b4cde1",
+      "price": 0.5658,
+      "quantity": 1766.1603673613563,
+      "timestamp": "2025-11-01 14:36:43.331255",
+      "fees": 0.0
+    },
+    {
+      "order_id": "e1c03027-64fb-4ad2-afd7-7c5d8b0e32f2",
+      "price": 0.5658,
+      "quantity": 1767.4089784376106,
+      "timestamp": "2025-11-01 14:36:43.332709",
+      "fees": 0
+    },
+    {
+      "order_id": "54d94be1-9152-462e-89a2-a993cf444b8e",
+      "price": 0.5664,
+      "quantity": 1767.4089784376106,
+      "timestamp": "2025-11-01 14:36:44.654647",
+      "fees": 0.0
+    },
+    {
+      "order_id": "cf0c8340-b228-465a-b470-faa1e603c92c",
+      "price": 0.5664,
+      "quantity": 1765.5367231638418,
+      "timestamp": "2025-11-01 14:36:44.655705",
+      "fees": 0
+    },
+    {
+      "order_id": "83bbf2fa-80f1-4779-a893-744836dcc2df",
+      "price": 0.566,
+      "quantity": 1765.5367231638418,
+      "timestamp": "2025-11-01 14:36:46.281269",
+      "fees": 0.0
+    },
+    {
+      "order_id": "cbedbf52-30de-436d-825f-48913428ce91",
+      "price": 0.566,
+      "quantity": 1766.78445229682,
+      "timestamp": "2025-11-01 14:36:46.282677",
+      "fees": 0
+    },
+    {
+      "order_id": "09668bce-99c6-49f6-928f-3ccb4613e6bc",
+      "price": 0.5661,
+      "quantity": 1766.78445229682,
+      "timestamp": "2025-11-01 14:36:47.906819",
+      "fees": 0.0
+    },
+    {
+      "order_id": "98d0e704-9b0f-48b0-a64a-c7864eba18ea",
+      "price": 0.5661,
+      "quantity": 1766.4723547076487,
+      "timestamp": "2025-11-01 14:36:47.908387",
+      "fees": 0
+    },
+    {
+      "order_id": "488b74aa-64c3-470b-bd54-9b1589faf8ae",
+      "price": 0.5656,
+      "quantity": 1766.4723547076487,
+      "timestamp": "2025-11-01 14:36:49.030749",
+      "fees": 0.0
+    },
+    {
+      "order_id": "9777e32f-61e1-48d9-9846-6149a1f6f0a5",
+      "price": 0.5656,
+      "quantity": 1768.0339462517682,
+      "timestamp": "2025-11-01 14:36:49.032294",
+      "fees": 0
+    },
+    {
+      "order_id": "60a2e2a5-6de6-48be-82b1-d3747cc6e7b1",
+      "price": 0.5656,
+      "quantity": 1768.0339462517682,
+      "timestamp": "2025-11-01 14:36:50.654529",
+      "fees": 0.0
+    },
+    {
+      "order_id": "54f6f761-c6f5-42ee-a1e4-418810a11800",
+      "price": 0.5656,
+      "quantity": 1768.0339462517682,
+      "timestamp": "2025-11-01 14:36:50.656025",
+      "fees": 0
+    },
+    {
+      "order_id": "18dd4278-a200-43eb-bcb9-708eb1abb000",
+      "price": 0.5652,
+      "quantity": 1768.0339462517682,
+      "timestamp": "2025-11-01 14:36:51.773232",
+      "fees": 0.0
+    },
+    {
+      "order_id": "28a059a4-d049-4445-a528-722f8785d38c",
+      "price": 0.5652,
+      "quantity": 1769.2852087756546,
+      "timestamp": "2025-11-01 14:36:51.774844",
+      "fees": 0
+    },
+    {
+      "order_id": "13e32ce2-23e9-4d19-b8b6-d043824d4d9f",
+      "price": 0.5668,
+      "quantity": 1769.2852087756546,
+      "timestamp": "2025-11-01 14:36:52.897899",
+      "fees": 0.0
+    },
+    {
+      "order_id": "6042d828-bfcf-48e1-b68b-3a8e1cf282af",
+      "price": 0.5668,
+      "quantity": 1764.2907551164433,
+      "timestamp": "2025-11-01 14:36:52.899821",
+      "fees": 0
+    },
+    {
+      "order_id": "4f29a296-a536-41a4-9efa-b26bfd190888",
+      "price": 0.5673,
+      "quantity": 1764.2907551164433,
+      "timestamp": "2025-11-01 14:36:55.139869",
+      "fees": 0.0
+    },
+    {
+      "order_id": "d2da3d61-4342-4ba1-8572-3248499c10d4",
+      "price": 0.5673,
+      "quantity": 1762.7357659086902,
+      "timestamp": "2025-11-01 14:36:55.141794",
+      "fees": 0
+    },
+    {
+      "order_id": "6a59ffd2-4a01-42d0-83af-0835a9614632",
+      "price": 0.5678,
+      "quantity": 1762.7357659086902,
+      "timestamp": "2025-11-01 14:36:56.259338",
+      "fees": 0.0
+    },
+    {
+      "order_id": "5afffa5d-1f82-465f-ba2d-eb98e6cf64af",
+      "price": 0.5678,
+      "quantity": 1761.1835153222967,
+      "timestamp": "2025-11-01 14:36:56.261331",
+      "fees": 0
+    },
+    {
+      "order_id": "182f4f30-81d5-4821-9f1d-9e46e8be6bb1",
+      "price": 0.5716,
+      "quantity": 1761.1835153222967,
+      "timestamp": "2025-11-01 14:36:58.601297",
+      "fees": 0.0
+    },
+    {
+      "order_id": "97d880d4-3cd5-4939-a482-e9751992210e",
+      "price": 0.5716,
+      "quantity": 1749.4751574527643,
+      "timestamp": "2025-11-01 14:36:58.603340",
+      "fees": 0
+    },
+    {
+      "order_id": "6111d4d9-1828-4999-9dcc-8f3c9e446e34",
+      "price": 0.573,
+      "quantity": 1749.4751574527643,
+      "timestamp": "2025-11-01 14:37:00.234152",
+      "fees": 0.0
+    },
+    {
+      "order_id": "b672578b-0d73-448f-bea5-e907e8c2c97b",
+      "price": 0.573,
+      "quantity": 1745.2006980802794,
+      "timestamp": "2025-11-01 14:37:00.236903",
+      "fees": 0
+    },
+    {
+      "order_id": "8ade6eae-fa65-4207-816a-cb4345dd654b",
+      "price": 0.5728,
+      "quantity": 1745.2006980802794,
+      "timestamp": "2025-11-01 14:37:02.471667",
+      "fees": 0.0
+    },
+    {
+      "order_id": "9d891724-7244-45fb-abf4-41120dec7d1c",
+      "price": 0.5728,
+      "quantity": 1745.8100558659219,
+      "timestamp": "2025-11-01 14:37:02.473817",
+      "fees": 0
+    },
+    {
+      "order_id": "37ec4401-2050-482f-b2f3-be58a291239d",
+      "price": 0.5718,
+      "quantity": 1745.8100558659219,
+      "timestamp": "2025-11-01 14:37:04.305315",
+      "fees": 0.0
+    },
+    {
+      "order_id": "bd5c4ad0-d7b7-41c8-bd3a-7ecdd0151202",
+      "price": 0.5718,
+      "quantity": 1748.8632388947185,
+      "timestamp": "2025-11-01 14:37:04.307549",
+      "fees": 0
+    },
+    {
+      "order_id": "44678dd3-9f37-45f6-b978-4d7c63a127f8",
+      "price": 0.5722,
+      "quantity": 1748.8632388947185,
+      "timestamp": "2025-11-01 14:37:07.355334",
+      "fees": 0.0
+    },
+    {
+      "order_id": "121f7f93-eef4-4166-8151-7e6d532116d1",
+      "price": 0.5722,
+      "quantity": 1747.6406850751484,
+      "timestamp": "2025-11-01 14:37:07.359486",
+      "fees": 0
+    },
+    {
+      "order_id": "593d6e8c-04ee-4feb-be87-6c1e11030e43",
+      "price": 0.5723,
+      "quantity": 1747.6406850751484,
+      "timestamp": "2025-11-01 14:37:08.986208",
+      "fees": 0.0
+    },
+    {
+      "order_id": "e08d98f2-1141-4def-af8a-1d96b34b47fc",
+      "price": 0.5723,
+      "quantity": 1747.3353136466887,
+      "timestamp": "2025-11-01 14:37:08.988489",
+      "fees": 0
+    },
+    {
+      "order_id": "b2b9dafb-5022-49b9-a9ca-8e5e016b955d",
+      "price": 0.5685,
+      "quantity": 1747.3353136466887,
+      "timestamp": "2025-11-01 14:37:10.107033",
+      "fees": 0.0
+    },
+    {
+      "order_id": "db92d15b-44f8-4c53-b49d-ccf4e5465de3",
+      "price": 0.5685,
+      "quantity": 1759.0149516270887,
+      "timestamp": "2025-11-01 14:37:10.110268",
+      "fees": 0
+    },
+    {
+      "order_id": "70e34ac3-4376-43e8-8d4f-072fe849ddc1",
+      "price": 0.5675,
+      "quantity": 1759.0149516270887,
+      "timestamp": "2025-11-01 14:37:12.762494",
+      "fees": 0.0
+    },
+    {
+      "order_id": "67260c91-4a18-4cdf-84cc-2493c14193a0",
+      "price": 0.5675,
+      "quantity": 1762.1145374449338,
+      "timestamp": "2025-11-01 14:37:12.765321",
+      "fees": 0
+    },
+    {
+      "order_id": "fb82e4c6-fe4c-42b1-97db-54d740e20139",
+      "price": 0.5661,
+      "quantity": 1762.1145374449338,
+      "timestamp": "2025-11-01 14:37:15.006976",
+      "fees": 0.0
+    },
+    {
+      "order_id": "2320378e-ec66-422e-8965-9b7266de29d2",
+      "price": 0.5661,
+      "quantity": 1766.4723547076487,
+      "timestamp": "2025-11-01 14:37:15.011292",
+      "fees": 0
+    },
+    {
+      "order_id": "6b88045e-a0e2-4176-a75b-40ffb4685f48",
+      "price": 0.5662,
+      "quantity": 1766.4723547076487,
+      "timestamp": "2025-11-01 14:37:16.136947",
+      "fees": 0.0
+    },
+    {
+      "order_id": "e1b2ae9b-bc83-4538-bdd7-e01edb675e54",
+      "price": 0.5662,
+      "quantity": 1766.1603673613563,
+      "timestamp": "2025-11-01 14:37:16.139496",
+      "fees": 0
+    },
+    {
+      "order_id": "ddb821ac-8752-44b2-bc7d-acd127254ac1",
+      "price": 0.5657,
+      "quantity": 1766.1603673613563,
+      "timestamp": "2025-11-01 14:37:18.489015",
+      "fees": 0.0
+    },
+    {
+      "order_id": "35502cd9-3661-4a54-af0d-bd4b0040e3ab",
+      "price": 0.5657,
+      "quantity": 1767.7214071062401,
+      "timestamp": "2025-11-01 14:37:18.491675",
+      "fees": 0
+    },
+    {
+      "order_id": "53dc1c0a-25f1-4d6e-98ca-6b8baad165ee",
+      "price": 0.5719,
+      "quantity": 1767.7214071062401,
+      "timestamp": "2025-11-01 14:37:19.616410",
+      "fees": 0.0
+    },
+    {
+      "order_id": "902a5a0f-fbfd-4aa4-98aa-88e0480442bb",
+      "price": 0.5719,
+      "quantity": 1748.5574401119077,
+      "timestamp": "2025-11-01 14:37:19.619558",
+      "fees": 0
+    },
+    {
+      "order_id": "b49cf187-23cd-4908-94af-7a94226eedca",
+      "price": 0.5813,
+      "quantity": 1748.5574401119077,
+      "timestamp": "2025-11-01 14:37:24.875734",
+      "fees": 0.0
+    },
+    {
+      "order_id": "98626fa7-ae2f-488d-85cc-237803051035",
+      "price": 0.5813,
+      "quantity": 1720.282126268708,
+      "timestamp": "2025-11-01 14:37:24.880064",
+      "fees": 0
+    },
+    {
+      "order_id": "b906aece-8484-48f3-ad58-4a09f654cfbe",
+      "price": 0.5794,
+      "quantity": 1720.282126268708,
+      "timestamp": "2025-11-01 14:37:28.811748",
+      "fees": 0.0
+    },
+    {
+      "order_id": "cf2d8dac-e549-4518-a528-f81350d15e70",
+      "price": 0.5794,
+      "quantity": 1725.9233690024162,
+      "timestamp": "2025-11-01 14:37:28.815107",
+      "fees": 0
+    },
+    {
+      "order_id": "08ef9e6f-4cd8-43ba-a279-aa1f69acb30b",
+      "price": 0.5799,
+      "quantity": 1725.9233690024162,
+      "timestamp": "2025-11-01 14:37:30.329175",
+      "fees": 0.0
+    },
+    {
+      "order_id": "afdf9157-6179-4ed9-be3a-5791e6f40e1f",
+      "price": 0.5799,
+      "quantity": 1724.435247456458,
+      "timestamp": "2025-11-01 14:37:30.332294",
+      "fees": 0
+    },
+    {
+      "order_id": "cbe3b8ab-026b-46c6-ba60-579a20bd358c",
+      "price": 0.5864,
+      "quantity": 1724.435247456458,
+      "timestamp": "2025-11-01 14:37:31.442879",
+      "fees": 0.0
+    },
+    {
+      "order_id": "7cafb751-c4ac-4820-8896-e11bcb24f717",
+      "price": 0.5864,
+      "quantity": 1705.3206002728512,
+      "timestamp": "2025-11-01 14:37:31.445987",
+      "fees": 0
+    },
+    {
+      "order_id": "f05e5071-33bd-4b45-a259-bfbc25d7d4d3",
+      "price": 0.5992,
+      "quantity": 1705.3206002728512,
+      "timestamp": "2025-11-01 14:37:35.278449",
+      "fees": 0.0
+    },
+    {
+      "order_id": "1354760e-c58e-4696-b957-b12f4f96ca89",
+      "price": 0.5992,
+      "quantity": 1668.8918558077437,
+      "timestamp": "2025-11-01 14:37:35.282271",
+      "fees": 0
+    },
+    {
+      "order_id": "09b41fa5-f5bf-4ba9-af13-4ca5b5525ddf",
+      "price": 0.5984,
+      "quantity": 1668.8918558077437,
+      "timestamp": "2025-11-01 14:37:37.400222",
+      "fees": 0.0
+    },
+    {
+      "order_id": "b31d6a11-57e0-4c03-8fd8-13b269671a08",
+      "price": 0.5984,
+      "quantity": 1671.1229946524063,
+      "timestamp": "2025-11-01 14:37:37.408043",
+      "fees": 0
+    },
+    {
+      "order_id": "dcfb336e-55cd-4de9-b8fb-d3062ff83977",
+      "price": 0.597,
+      "quantity": 1671.1229946524063,
+      "timestamp": "2025-11-01 14:37:38.720802",
+      "fees": 0.0
+    },
+    {
+      "order_id": "5cc67881-21b5-4c9d-a4fd-041557d533de",
+      "price": 0.597,
+      "quantity": 1675.0418760469013,
+      "timestamp": "2025-11-01 14:37:38.725716",
+      "fees": 0
+    },
+    {
+      "order_id": "c3b4dc50-9141-40d9-af5d-98c93efe782b",
+      "price": 0.5986,
+      "quantity": 1675.0418760469013,
+      "timestamp": "2025-11-01 14:37:39.837692",
+      "fees": 0.0
+    },
+    {
+      "order_id": "77b69157-a981-43f5-976b-73964fed1dea",
+      "price": 0.5986,
+      "quantity": 1670.5646508519878,
+      "timestamp": "2025-11-01 14:37:39.842097",
+      "fees": 0
+    },
+    {
+      "order_id": "8f26326e-afb4-4aaf-93bb-2c5302ffe352",
+      "price": 0.6053,
+      "quantity": 1670.5646508519878,
+      "timestamp": "2025-11-01 14:37:44.200922",
+      "fees": 0.0
+    },
+    {
+      "order_id": "e0b17c91-00f8-4319-be7f-6bf261171f76",
+      "price": 0.6053,
+      "quantity": 1652.0733520568315,
+      "timestamp": "2025-11-01 14:37:44.216279",
+      "fees": 0
+    },
+    {
+      "order_id": "8d528aa3-df51-40a7-ac90-3ca821913db8",
+      "price": 0.6074,
+      "quantity": 1652.0733520568315,
+      "timestamp": "2025-11-01 14:37:45.343679",
+      "fees": 0.0
+    },
+    {
+      "order_id": "56921ddd-618f-4952-8bda-79f116ba49b6",
+      "price": 0.6074,
+      "quantity": 1646.3615409944023,
+      "timestamp": "2025-11-01 14:37:45.352908",
+      "fees": 0
+    },
+    {
+      "order_id": "ab575b23-15cc-4ff3-8309-cc632bcaf85e",
+      "price": 0.6071,
+      "quantity": 1646.3615409944023,
+      "timestamp": "2025-11-01 14:37:46.477866",
+      "fees": 0.0
+    },
+    {
+      "order_id": "33133226-47f2-4c2d-84d0-6937bfeb7fcf",
+      "price": 0.6071,
+      "quantity": 1647.1750947125681,
+      "timestamp": "2025-11-01 14:37:46.487107",
+      "fees": 0
+    },
+    {
+      "order_id": "284b5a48-f147-4e3a-bf11-35606ca4416a",
+      "price": 0.61,
+      "quantity": 1647.1750947125681,
+      "timestamp": "2025-11-01 14:37:47.612469",
+      "fees": 0.0
+    },
+    {
+      "order_id": "8d43d193-552d-4759-baba-85ce4852986a",
+      "price": 0.61,
+      "quantity": 1639.344262295082,
+      "timestamp": "2025-11-01 14:37:47.623730",
+      "fees": 0
+    },
+    {
+      "order_id": "be2c6ae1-aa82-42a9-9441-f3b20d268316",
+      "price": 0.6075,
+      "quantity": 1639.344262295082,
+      "timestamp": "2025-11-01 14:37:49.461557",
+      "fees": 0.0
+    },
+    {
+      "order_id": "082d952e-1cb9-44e2-9916-5b8878b451f9",
+      "price": 0.6075,
+      "quantity": 1646.0905349794239,
+      "timestamp": "2025-11-01 14:37:49.470635",
+      "fees": 0
+    },
+    {
+      "order_id": "ebfde720-87b4-4b6d-a0ef-97ead2f1ff06",
+      "price": 0.6123,
+      "quantity": 1646.0905349794239,
+      "timestamp": "2025-11-01 14:37:50.598803",
+      "fees": 0.0
+    },
+    {
+      "order_id": "7af95df4-6bd9-41aa-9ff0-5ba866d214b1",
+      "price": 0.6123,
+      "quantity": 1633.186346562143,
+      "timestamp": "2025-11-01 14:37:50.617474",
+      "fees": 0
+    },
+    {
+      "order_id": "48b5f0cd-6352-4315-bbfe-a1d1b4515adc",
+      "price": 0.6096,
+      "quantity": 1633.186346562143,
+      "timestamp": "2025-11-01 14:37:51.747165",
+      "fees": 0.0
+    },
+    {
+      "order_id": "4721dda3-cc83-456b-acaa-925667c825eb",
+      "price": 0.6096,
+      "quantity": 1640.4199475065616,
+      "timestamp": "2025-11-01 14:37:51.766056",
       "fees": 0
     }
   ],
-  "closed_positions": []
+  "closed_positions": [
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5662,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "52845743-ab8c-4ad7-9ed8-42c225b218cb",
+          "price": 0.5662,
+          "quantity": 1766.1603673613563,
+          "timestamp": "2025-11-01 14:36:41.504778",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "28eaf290-c7ba-4276-b265-4a4197b4cde1",
+          "price": 0.5658,
+          "quantity": 1766.1603673613563,
+          "timestamp": "2025-11-01 14:36:43.331255",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.7064641469446608,
+      "tp": [
+        [
+          0.67944,
+          3119322.443238001
+        ]
+      ],
+      "sl": [
+        [
+          0.50958,
+          3119322.443238001
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5658,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "e1c03027-64fb-4ad2-afd7-7c5d8b0e32f2",
+          "price": 0.5658,
+          "quantity": 1767.4089784376106,
+          "timestamp": "2025-11-01 14:36:43.332709",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "54d94be1-9152-462e-89a2-a993cf444b8e",
+          "price": 0.5664,
+          "quantity": 1767.4089784376106,
+          "timestamp": "2025-11-01 14:36:44.654647",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -1.0604453870626458,
+      "tp": [
+        [
+          0.45264,
+          3123734.4970618784
+        ]
+      ],
+      "sl": [
+        [
+          0.62238,
+          3123734.4970618784
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5664,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "cf0c8340-b228-465a-b470-faa1e603c92c",
+          "price": 0.5664,
+          "quantity": 1765.5367231638418,
+          "timestamp": "2025-11-01 14:36:44.655705",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "83bbf2fa-80f1-4779-a893-744836dcc2df",
+          "price": 0.566,
+          "quantity": 1765.5367231638418,
+          "timestamp": "2025-11-01 14:36:46.281269",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.7062146892656549,
+      "tp": [
+        [
+          0.67968,
+          3117119.920840116
+        ]
+      ],
+      "sl": [
+        [
+          0.50976,
+          3117119.920840116
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.566,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "cbedbf52-30de-436d-825f-48913428ce91",
+          "price": 0.566,
+          "quantity": 1766.78445229682,
+          "timestamp": "2025-11-01 14:36:46.282677",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "09668bce-99c6-49f6-928f-3ccb4613e6bc",
+          "price": 0.5661,
+          "quantity": 1766.78445229682,
+          "timestamp": "2025-11-01 14:36:47.906819",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.1766784452298587,
+      "tp": [
+        [
+          0.4528,
+          3121527.3008777746
+        ]
+      ],
+      "sl": [
+        [
+          0.6226,
+          3121527.3008777746
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5661,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "98d0e704-9b0f-48b0-a64a-c7864eba18ea",
+          "price": 0.5661,
+          "quantity": 1766.4723547076487,
+          "timestamp": "2025-11-01 14:36:47.908387",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "488b74aa-64c3-470b-bd54-9b1589faf8ae",
+          "price": 0.5656,
+          "quantity": 1766.4723547076487,
+          "timestamp": "2025-11-01 14:36:49.030749",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.8832361773539232,
+      "tp": [
+        [
+          0.67932,
+          3120424.579946385
+        ]
+      ],
+      "sl": [
+        [
+          0.5094900000000001,
+          3120424.579946385
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5656,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "9777e32f-61e1-48d9-9846-6149a1f6f0a5",
+          "price": 0.5656,
+          "quantity": 1768.0339462517682,
+          "timestamp": "2025-11-01 14:36:49.032294",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "60a2e2a5-6de6-48be-82b1-d3747cc6e7b1",
+          "price": 0.5656,
+          "quantity": 1768.0339462517682,
+          "timestamp": "2025-11-01 14:36:50.654529",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 0.0,
+      "tp": [
+        [
+          0.45248,
+          3125944.0350986
+        ]
+      ],
+      "sl": [
+        [
+          0.62216,
+          3125944.0350986
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5656,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "54f6f761-c6f5-42ee-a1e4-418810a11800",
+          "price": 0.5656,
+          "quantity": 1768.0339462517682,
+          "timestamp": "2025-11-01 14:36:50.656025",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "18dd4278-a200-43eb-bcb9-708eb1abb000",
+          "price": 0.5652,
+          "quantity": 1768.0339462517682,
+          "timestamp": "2025-11-01 14:36:51.773232",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.7072135785006294,
+      "tp": [
+        [
+          0.67872,
+          3125944.0350986
+        ]
+      ],
+      "sl": [
+        [
+          0.50904,
+          3125944.0350986
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5652,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "28a059a4-d049-4445-a528-722f8785d38c",
+          "price": 0.5652,
+          "quantity": 1769.2852087756546,
+          "timestamp": "2025-11-01 14:36:51.774844",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "13e32ce2-23e9-4d19-b8b6-d043824d4d9f",
+          "price": 0.5668,
+          "quantity": 1769.2852087756546,
+          "timestamp": "2025-11-01 14:36:52.897899",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -2.830856334040932,
+      "tp": [
+        [
+          0.45216000000000006,
+          3130370.149992312
+        ]
+      ],
+      "sl": [
+        [
+          0.62172,
+          3130370.149992312
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5668,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "6042d828-bfcf-48e1-b68b-3a8e1cf282af",
+          "price": 0.5668,
+          "quantity": 1764.2907551164433,
+          "timestamp": "2025-11-01 14:36:52.899821",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "4f29a296-a536-41a4-9efa-b26bfd190888",
+          "price": 0.5673,
+          "quantity": 1764.2907551164433,
+          "timestamp": "2025-11-01 14:36:55.139869",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 0.8821453775583203,
+      "tp": [
+        [
+          0.68016,
+          3112721.8685893496
+        ]
+      ],
+      "sl": [
+        [
+          0.51012,
+          3112721.8685893496
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5673,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "d2da3d61-4342-4ba1-8572-3248499c10d4",
+          "price": 0.5673,
+          "quantity": 1762.7357659086902,
+          "timestamp": "2025-11-01 14:36:55.141794",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "6a59ffd2-4a01-42d0-83af-0835a9614632",
+          "price": 0.5678,
+          "quantity": 1762.7357659086902,
+          "timestamp": "2025-11-01 14:36:56.259338",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.8813678829542481,
+      "tp": [
+        [
+          0.45384,
+          3107237.3804136966
+        ]
+      ],
+      "sl": [
+        [
+          0.6240300000000001,
+          3107237.3804136966
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5678,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "5afffa5d-1f82-465f-ba2d-eb98e6cf64af",
+          "price": 0.5678,
+          "quantity": 1761.1835153222967,
+          "timestamp": "2025-11-01 14:36:56.261331",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "182f4f30-81d5-4821-9f1d-9e46e8be6bb1",
+          "price": 0.5716,
+          "quantity": 1761.1835153222967,
+          "timestamp": "2025-11-01 14:36:58.601297",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 6.692497358224772,
+      "tp": [
+        [
+          0.68136,
+          3101767.374643002
+        ]
+      ],
+      "sl": [
+        [
+          0.51102,
+          3101767.374643002
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5716,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "97d880d4-3cd5-4939-a482-e9751992210e",
+          "price": 0.5716,
+          "quantity": 1749.4751574527643,
+          "timestamp": "2025-11-01 14:36:58.603340",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "6111d4d9-1828-4999-9dcc-8f3c9e446e34",
+          "price": 0.573,
+          "quantity": 1749.4751574527643,
+          "timestamp": "2025-11-01 14:37:00.234152",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -2.4492652204337944,
+      "tp": [
+        [
+          0.45728,
+          3060663.326544374
+        ]
+      ],
+      "sl": [
+        [
+          0.6287600000000001,
+          3060663.326544374
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.573,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "b672578b-0d73-448f-bea5-e907e8c2c97b",
+          "price": 0.573,
+          "quantity": 1745.2006980802794,
+          "timestamp": "2025-11-01 14:37:00.236903",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "8ade6eae-fa65-4207-816a-cb4345dd654b",
+          "price": 0.5728,
+          "quantity": 1745.2006980802794,
+          "timestamp": "2025-11-01 14:37:02.471667",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.34904013961601743,
+      "tp": [
+        [
+          0.6875999999999999,
+          3045725.4765798943
+        ]
+      ],
+      "sl": [
+        [
+          0.5156999999999999,
+          3045725.4765798943
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5728,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "9d891724-7244-45fb-abf4-41120dec7d1c",
+          "price": 0.5728,
+          "quantity": 1745.8100558659219,
+          "timestamp": "2025-11-01 14:37:02.473817",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "37ec4401-2050-482f-b2f3-be58a291239d",
+          "price": 0.5718,
+          "quantity": 1745.8100558659219,
+          "timestamp": "2025-11-01 14:37:04.305315",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 1.7458100558659235,
+      "tp": [
+        [
+          0.45824,
+          3047852.751162573
+        ]
+      ],
+      "sl": [
+        [
+          0.63008,
+          3047852.751162573
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5718,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "bd5c4ad0-d7b7-41c8-bd3a-7ecdd0151202",
+          "price": 0.5718,
+          "quantity": 1748.8632388947185,
+          "timestamp": "2025-11-01 14:37:04.307549",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "44678dd3-9f37-45f6-b978-4d7c63a127f8",
+          "price": 0.5722,
+          "quantity": 1748.8632388947185,
+          "timestamp": "2025-11-01 14:37:07.355334",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 0.6995452955580045,
+      "tp": [
+        [
+          0.68616,
+          3058522.628357325
+        ]
+      ],
+      "sl": [
+        [
+          0.51462,
+          3058522.628357325
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5722,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "121f7f93-eef4-4166-8151-7e6d532116d1",
+          "price": 0.5722,
+          "quantity": 1747.6406850751484,
+          "timestamp": "2025-11-01 14:37:07.359486",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "593d6e8c-04ee-4feb-be87-6c1e11030e43",
+          "price": 0.5723,
+          "quantity": 1747.6406850751484,
+          "timestamp": "2025-11-01 14:37:08.986208",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.1747640685074956,
+      "tp": [
+        [
+          0.45776000000000006,
+          3054247.964129934
+        ]
+      ],
+      "sl": [
+        [
+          0.6294200000000001,
+          3054247.964129934
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5723,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "e08d98f2-1141-4def-af8a-1d96b34b47fc",
+          "price": 0.5723,
+          "quantity": 1747.3353136466887,
+          "timestamp": "2025-11-01 14:37:08.988489",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "b2b9dafb-5022-49b9-a9ca-8e5e016b955d",
+          "price": 0.5685,
+          "quantity": 1747.3353136466887,
+          "timestamp": "2025-11-01 14:37:10.107033",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -6.639874191857462,
+      "tp": [
+        [
+          0.68676,
+          3053180.698316772
+        ]
+      ],
+      "sl": [
+        [
+          0.51507,
+          3053180.698316772
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5685,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "db92d15b-44f8-4c53-b49d-ccf4e5465de3",
+          "price": 0.5685,
+          "quantity": 1759.0149516270887,
+          "timestamp": "2025-11-01 14:37:10.110268",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "70e34ac3-4376-43e8-8d4f-072fe849ddc1",
+          "price": 0.5675,
+          "quantity": 1759.0149516270887,
+          "timestamp": "2025-11-01 14:37:12.762494",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 1.7590149516270903,
+      "tp": [
+        [
+          0.45480000000000004,
+          3094133.6000476494
+        ]
+      ],
+      "sl": [
+        [
+          0.6253500000000001,
+          3094133.6000476494
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5675,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "67260c91-4a18-4cdf-84cc-2493c14193a0",
+          "price": 0.5675,
+          "quantity": 1762.1145374449338,
+          "timestamp": "2025-11-01 14:37:12.765321",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "fb82e4c6-fe4c-42b1-97db-54d740e20139",
+          "price": 0.5661,
+          "quantity": 1762.1145374449338,
+          "timestamp": "2025-11-01 14:37:15.006976",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -2.466960352422831,
+      "tp": [
+        [
+          0.6809999999999999,
+          3105047.6430747733
+        ]
+      ],
+      "sl": [
+        [
+          0.51075,
+          3105047.6430747733
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5661,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "2320378e-ec66-422e-8965-9b7266de29d2",
+          "price": 0.5661,
+          "quantity": 1766.4723547076487,
+          "timestamp": "2025-11-01 14:37:15.011292",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "6b88045e-a0e2-4176-a75b-40ffb4685f48",
+          "price": 0.5662,
+          "quantity": 1766.4723547076487,
+          "timestamp": "2025-11-01 14:37:16.136947",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.17664723547074543,
+      "tp": [
+        [
+          0.45288000000000006,
+          3120424.579946385
+        ]
+      ],
+      "sl": [
+        [
+          0.6227100000000001,
+          3120424.579946385
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5662,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "e1b2ae9b-bc83-4538-bdd7-e01edb675e54",
+          "price": 0.5662,
+          "quantity": 1766.1603673613563,
+          "timestamp": "2025-11-01 14:37:16.139496",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "ddb821ac-8752-44b2-bc7d-acd127254ac1",
+          "price": 0.5657,
+          "quantity": 1766.1603673613563,
+          "timestamp": "2025-11-01 14:37:18.489015",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.883080183680777,
+      "tp": [
+        [
+          0.67944,
+          3119322.443238001
+        ]
+      ],
+      "sl": [
+        [
+          0.50958,
+          3119322.443238001
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5657,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "35502cd9-3661-4a54-af0d-bd4b0040e3ab",
+          "price": 0.5657,
+          "quantity": 1767.7214071062401,
+          "timestamp": "2025-11-01 14:37:18.491675",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "53dc1c0a-25f1-4d6e-98ca-6b8baad165ee",
+          "price": 0.5719,
+          "quantity": 1767.7214071062401,
+          "timestamp": "2025-11-01 14:37:19.616410",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -10.959872724058659,
+      "tp": [
+        [
+          0.45256,
+          3124838.9731416656
+        ]
+      ],
+      "sl": [
+        [
+          0.62227,
+          3124838.9731416656
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5719,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "902a5a0f-fbfd-4aa4-98aa-88e0480442bb",
+          "price": 0.5719,
+          "quantity": 1748.5574401119077,
+          "timestamp": "2025-11-01 14:37:19.619558",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "b49cf187-23cd-4908-94af-7a94226eedca",
+          "price": 0.5813,
+          "quantity": 1748.5574401119077,
+          "timestamp": "2025-11-01 14:37:24.875734",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 16.436439937052064,
+      "tp": [
+        [
+          0.6862799999999999,
+          3057453.1213707076
+        ]
+      ],
+      "sl": [
+        [
+          0.51471,
+          3057453.1213707076
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5813,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "98626fa7-ae2f-488d-85cc-237803051035",
+          "price": 0.5813,
+          "quantity": 1720.282126268708,
+          "timestamp": "2025-11-01 14:37:24.880064",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "b906aece-8484-48f3-ad58-4a09f654cfbe",
+          "price": 0.5794,
+          "quantity": 1720.282126268708,
+          "timestamp": "2025-11-01 14:37:28.811748",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 3.2685360399105674,
+      "tp": [
+        [
+          0.46504000000000006,
+          2959370.593959587
+        ]
+      ],
+      "sl": [
+        [
+          0.63943,
+          2959370.593959587
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5794,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "cf2d8dac-e549-4518-a528-f81350d15e70",
+          "price": 0.5794,
+          "quantity": 1725.9233690024162,
+          "timestamp": "2025-11-01 14:37:28.815107",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "08ef9e6f-4cd8-43ba-a279-aa1f69acb30b",
+          "price": 0.5799,
+          "quantity": 1725.9233690024162,
+          "timestamp": "2025-11-01 14:37:30.329175",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 0.862961684501113,
+      "tp": [
+        [
+          0.69528,
+          2978811.4756686506
+        ]
+      ],
+      "sl": [
+        [
+          0.52146,
+          2978811.4756686506
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5799,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "afdf9157-6179-4ed9-be3a-5791e6f40e1f",
+          "price": 0.5799,
+          "quantity": 1724.435247456458,
+          "timestamp": "2025-11-01 14:37:30.332294",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "cbe3b8ab-026b-46c6-ba60-579a20bd358c",
+          "price": 0.5864,
+          "quantity": 1724.435247456458,
+          "timestamp": "2025-11-01 14:37:31.442879",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -11.208829108467082,
+      "tp": [
+        [
+          0.46392,
+          2973676.9226702154
+        ]
+      ],
+      "sl": [
+        [
+          0.6378900000000001,
+          2973676.9226702154
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5864,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "7cafb751-c4ac-4820-8896-e11bcb24f717",
+          "price": 0.5864,
+          "quantity": 1705.3206002728512,
+          "timestamp": "2025-11-01 14:37:31.445987",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "f05e5071-33bd-4b45-a259-bfbc25d7d4d3",
+          "price": 0.5992,
+          "quantity": 1705.3206002728512,
+          "timestamp": "2025-11-01 14:37:35.278449",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 21.828103683492362,
+      "tp": [
+        [
+          0.70368,
+          2908118.349714957
+        ]
+      ],
+      "sl": [
+        [
+          0.52776,
+          2908118.349714957
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.5992,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "1354760e-c58e-4696-b957-b12f4f96ca89",
+          "price": 0.5992,
+          "quantity": 1668.8918558077437,
+          "timestamp": "2025-11-01 14:37:35.282271",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "09b41fa5-f5bf-4ba9-af13-4ca5b5525ddf",
+          "price": 0.5984,
+          "quantity": 1668.8918558077437,
+          "timestamp": "2025-11-01 14:37:37.400222",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 1.335113484646048,
+      "tp": [
+        [
+          0.47936,
+          2785200.026381415
+        ]
+      ],
+      "sl": [
+        [
+          0.65912,
+          2785200.026381415
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5984,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "b31d6a11-57e0-4c03-8fd8-13b269671a08",
+          "price": 0.5984,
+          "quantity": 1671.1229946524063,
+          "timestamp": "2025-11-01 14:37:37.408043",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "dcfb336e-55cd-4de9-b8fb-d3062ff83977",
+          "price": 0.597,
+          "quantity": 1671.1229946524063,
+          "timestamp": "2025-11-01 14:37:38.720802",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -2.339572192513482,
+      "tp": [
+        [
+          0.71808,
+          2792652.0632560262
+        ]
+      ],
+      "sl": [
+        [
+          0.53856,
+          2792652.0632560262
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.597,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "5cc67881-21b5-4c9d-a4fd-041557d533de",
+          "price": 0.597,
+          "quantity": 1675.0418760469013,
+          "timestamp": "2025-11-01 14:37:38.725716",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "c3b4dc50-9141-40d9-af5d-98c93efe782b",
+          "price": 0.5986,
+          "quantity": 1675.0418760469013,
+          "timestamp": "2025-11-01 14:37:39.837692",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -2.680067001675119,
+      "tp": [
+        [
+          0.4776,
+          2805765.2865107227
+        ]
+      ],
+      "sl": [
+        [
+          0.6567000000000001,
+          2805765.2865107227
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.5986,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "77b69157-a981-43f5-976b-73964fed1dea",
+          "price": 0.5986,
+          "quantity": 1670.5646508519878,
+          "timestamp": "2025-11-01 14:37:39.842097",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "8f26326e-afb4-4aaf-93bb-2c5302ffe352",
+          "price": 0.6053,
+          "quantity": 1670.5646508519878,
+          "timestamp": "2025-11-01 14:37:44.200922",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": 11.1927831607082,
+      "tp": [
+        [
+          0.71832,
+          2790786.252676224
+        ]
+      ],
+      "sl": [
+        [
+          0.53874,
+          2790786.252676224
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.6053,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "e0b17c91-00f8-4319-be7f-6bf261171f76",
+          "price": 0.6053,
+          "quantity": 1652.0733520568315,
+          "timestamp": "2025-11-01 14:37:44.216279",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "8d528aa3-df51-40a7-ac90-3ca821913db8",
+          "price": 0.6074,
+          "quantity": 1652.0733520568315,
+          "timestamp": "2025-11-01 14:37:45.343679",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -3.4693540393195144,
+      "tp": [
+        [
+          0.48424,
+          2729346.3605762953
+        ]
+      ],
+      "sl": [
+        [
+          0.66583,
+          2729346.3605762953
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.6074,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "56921ddd-618f-4952-8bda-79f116ba49b6",
+          "price": 0.6074,
+          "quantity": 1646.3615409944023,
+          "timestamp": "2025-11-01 14:37:45.352908",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "ab575b23-15cc-4ff3-8309-cc632bcaf85e",
+          "price": 0.6071,
+          "quantity": 1646.3615409944023,
+          "timestamp": "2025-11-01 14:37:46.477866",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -0.4939084622984491,
+      "tp": [
+        [
+          0.7288800000000001,
+          2710506.323665463
+        ]
+      ],
+      "sl": [
+        [
+          0.54666,
+          2710506.323665463
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.6071,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "33133226-47f2-4c2d-84d0-6937bfeb7fcf",
+          "price": 0.6071,
+          "quantity": 1647.1750947125681,
+          "timestamp": "2025-11-01 14:37:46.487107",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "284b5a48-f147-4e3a-bf11-35606ca4416a",
+          "price": 0.61,
+          "quantity": 1647.1750947125681,
+          "timestamp": "2025-11-01 14:37:47.612469",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -4.77680777466647,
+      "tp": [
+        [
+          0.48568,
+          2713185.792641358
+        ]
+      ],
+      "sl": [
+        [
+          0.66781,
+          2713185.792641358
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.61,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "8d43d193-552d-4759-baba-85ce4852986a",
+          "price": 0.61,
+          "quantity": 1639.344262295082,
+          "timestamp": "2025-11-01 14:37:47.623730",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "be2c6ae1-aa82-42a9-9441-f3b20d268316",
+          "price": 0.6075,
+          "quantity": 1639.344262295082,
+          "timestamp": "2025-11-01 14:37:49.461557",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -4.0983606557376175,
+      "tp": [
+        [
+          0.732,
+          2687449.6103198067
+        ]
+      ],
+      "sl": [
+        [
+          0.549,
+          2687449.6103198067
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.SHORT",
+      "qty": 0.0,
+      "avg_price": 0.6075,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "082d952e-1cb9-44e2-9916-5b8878b451f9",
+          "price": 0.6075,
+          "quantity": 1646.0905349794239,
+          "timestamp": "2025-11-01 14:37:49.470635",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "ebfde720-87b4-4b6d-a0ef-97ead2f1ff06",
+          "price": 0.6123,
+          "quantity": 1646.0905349794239,
+          "timestamp": "2025-11-01 14:37:50.598803",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -7.901234567901096,
+      "tp": [
+        [
+          0.48600000000000004,
+          2709614.049348846
+        ]
+      ],
+      "sl": [
+        [
+          0.6682500000000001,
+          2709614.049348846
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    },
+    {
+      "side": "PositionSide.LONG",
+      "qty": 0.0,
+      "avg_price": 0.6123,
+      "total_fees": 0.0,
+      "state": "PositionStatus.CLOSED",
+      "entry_orders": [
+        {
+          "order_id": "7af95df4-6bd9-41aa-9ff0-5ba866d214b1",
+          "price": 0.6123,
+          "quantity": 1633.186346562143,
+          "timestamp": "2025-11-01 14:37:50.617474",
+          "fees": 0
+        }
+      ],
+      "exit_orders": [
+        {
+          "order_id": "48b5f0cd-6352-4315-bbfe-a1d1b4515adc",
+          "price": 0.6096,
+          "quantity": 1633.186346562143,
+          "timestamp": "2025-11-01 14:37:51.747165",
+          "fees": 0.0
+        }
+      ],
+      "realized_pnl": -4.409603135717663,
+      "tp": [
+        [
+          0.73476,
+          2667297.642597
+        ]
+      ],
+      "sl": [
+        [
+          0.55107,
+          2667297.642597
+        ]
+      ],
+      "reached_tp": false,
+      "reached_sl": false
+    }
+  ]
 }

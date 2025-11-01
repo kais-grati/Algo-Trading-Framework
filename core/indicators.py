@@ -13,6 +13,8 @@ class IndicatorValue:
         self.color = color or "#FFFFFF"
         self.metadata = metadata or {}
 
+EMPTY_VALUE = IndicatorValue()
+
 
 class BaseIndicator(ABC):
     """Base class for simple indicators (overlay type)"""
@@ -33,7 +35,7 @@ class BaseIndicator(ABC):
         pass
     
     def get_current_value(self) -> Optional[IndicatorValue]:
-        return self.values[-1] if self.values else None
+        return self.values[-1] if self.values else EMPTY_VALUE
     
     def get_values(self, n: Optional[int] = None) -> List[IndicatorValue]:
         if n is None:
