@@ -1,332 +1,321 @@
 from core.position_manager import BasePositionManager
 from data.base_candle import BaseCandle
-from data.data_provider import BaseDataProvider, BaseSubscriber
 from dataclasses import dataclass, field, asdict
 from colorama import Fore, Style
-import csv
 import time
 from pathlib import Path
 from collections import deque
+import numpy as np
 
 
-@dataclass
+@dataclass(slots=True)
 class BaseBacktestStats:
-    positions: int = 0  # total number of closed positions (count)
-    position_frquency: float = 0.0  # how often positions were opened (positions / exposure_time, per hour)
-    longs: int = 0  # number of long positions taken (count)
-    shorts: int = 0  # number of short positions taken (count)
+    positions: int = 0
+    position_frquency: float = 0.0
+    longs: int = 0
+    shorts: int = 0
 
-    exit_wins: int = 0  # number of exits that hit take profit (count)
-    exit_losses: int = 0  # number of exits that hit stop loss (count)
-    exit_winrate: float = 0.0  # ratio of exit_wins / (exit_wins + exit_losses) (0.0–1.0)
+    exit_wins: int = 0
+    exit_losses: int = 0
+    exit_winrate: float = 0.0
 
-    position_wins: int = 0  # number of profitable positions closed (count)
-    position_losses: int = 0  # number of losing positions closed (count)
-    position_winrate: float = 0.0  # ratio of winning positions to total (0.0–1.0)
+    position_wins: int = 0
+    position_losses: int = 0
+    position_winrate: float = 0.0
 
-    long_wins: int = 0  # number of profitable long positions (count)
-    long_winrate: float = 0.0  # winrate of long positions (0.0–1.0)
-    short_wins: int = 0  # number of profitable short positions (count)
-    short_winrate: float = 0.0  # winrate of short positions (0.0–1.0)
+    long_wins: int = 0
+    long_winrate: float = 0.0
+    short_wins: int = 0
+    short_winrate: float = 0.0
 
-    pnl: float = 0.0  # current unrealized profit/loss ($)
-    total_pnl: float = 0.0  # cumulative realized profit/loss across all positions ($)
-    avg_position_pnl: float = 0.0  # average PnL per position ($)
+    pnl: float = 0.0
+    total_pnl: float = 0.0
+    avg_position_pnl: float = 0.0
 
-    gross_profit: float = 0.0  # sum of all profits from winning trades only ($)
-    gross_loss: float = 0.0  # sum of all losses from losing trades only ($, negative)
-    profit_factor: float = 0.0  # ratio of gross_profit / abs(gross_loss)
+    gross_profit: float = 0.0
+    gross_loss: float = 0.0
+    profit_factor: float = 0.0
 
-    avg_win: float = 0.0  # average profit per winning trade ($)
-    avg_loss: float = 0.0  # average loss per losing trade ($)
-    max_drawdown: float = 0.0  # maximum equity peak-to-trough drop observed ($)
-    max_win: float = 0.0  # largest single-trade profit ($)
-    max_loss: float = 0.0  # largest single-trade loss ($)
+    avg_win: float = 0.0
+    avg_loss: float = 0.0
+    max_drawdown: float = 0.0
+    max_win: float = 0.0
+    max_loss: float = 0.0
 
-    equity: float = 0.0   # latest equity value
-    peak_equity: float = 0.0  # highest equity value reached
-    max_win_streak: int = 0  # longest streak of consecutive winning positions (count)
-    max_loss_streak: int = 0  # longest streak of consecutive losing positions (count)
+    equity: float = 0.0
+    peak_equity: float = 0.0
+    max_win_streak: int = 0
+    max_loss_streak: int = 0
 
-    sharpe_ratio: float = 0.0  # risk-adjusted return (Sharpe ratio)
+    sharpe_ratio: float = 0.0
 
-    exposure_time: float = 0.0  # total time spent with an open position (hours)
-    avg_position_duration: float = 0.0  # average position holding time (hours)
+    exposure_time: float = 0.0
+    avg_position_duration: float = 0.0
 
-    fees_paid: float = 0.0  # total trading fees paid ($)
+    fees_paid: float = 0.0
 
-    # New fields for plotting support
-    current_price: float = 0.0  # current asset price
-    current_position_info: dict = field(default_factory=dict)  # current position details
+    current_price: float = 0.0
+    current_position_info: dict = field(default_factory=dict)
 
     def __str__(self) -> str:
-        """Pretty print backtest statistics with color coding and categorization."""
+        """Optimized pretty print with pre-computed values."""
         
-        # ANSI color codes
-        class Colors:
-            HEADER = '\033[95m'
-            BLUE = '\033[94m'
-            CYAN = '\033[96m'
-            GREEN = '\033[92m'
-            YELLOW = '\033[93m'
-            RED = '\033[91m'
-            BOLD = '\033[1m'
-            UNDERLINE = '\033[4m'
-            END = '\033[0m'
+        # Pre-compute all formatted values at once
+        positions_str = f"{self.positions:,}"
+        freq_str = f"{self.position_frquency:,.2f}"
+        longs_str = f"{self.longs:,}"
+        shorts_str = f"{self.shorts:,}"
+        exposure_str = f"{self.exposure_time:,.2f}"
+        avg_dur_str = f"{self.avg_position_duration:,.2f}"
         
-        def format_number(value, is_percentage=False, is_currency=False):
-            """Format numbers with appropriate styling."""
-            if is_percentage:
-                return f"{value * 100:.2f}%"
-            elif is_currency:
-                color = Colors.GREEN if value >= 0 else Colors.RED
-                return f"{color}${value:,.2f}{Colors.END}"
-            elif isinstance(value, float):
-                return f"{value:,.2f}"
-            else:
-                return f"{value:,}"
+        pos_wins_str = f"{self.position_wins:,}"
+        pos_losses_str = f"{self.position_losses:,}"
+        pos_winrate_pct = self.position_winrate * 100
+        exit_wins_str = f"{self.exit_wins:,}"
+        exit_losses_str = f"{self.exit_losses:,}"
+        exit_winrate_pct = self.exit_winrate * 100
         
-        def format_metric(label, value, is_percentage=False, is_currency=False, color=Colors.CYAN):
-            """Format a metric line with consistent spacing."""
-            formatted_value = format_number(value, is_percentage, is_currency)
-            return f"  {color}{label:<25}{Colors.END} {formatted_value}"
+        long_wins_str = f"{self.long_wins:,}"
+        long_winrate_pct = self.long_winrate * 100
+        short_wins_str = f"{self.short_wins:,}"
+        short_winrate_pct = self.short_winrate * 100
         
-        lines = []
+        # Currency formatting with color
+        pnl_color = '\033[92m' if self.pnl >= 0 else '\033[91m'
+        total_pnl_color = '\033[92m' if self.total_pnl >= 0 else '\033[91m'
+        avg_pnl_color = '\033[92m' if self.avg_position_pnl >= 0 else '\033[91m'
+        gross_profit_color = '\033[92m' if self.gross_profit >= 0 else '\033[91m'
+        gross_loss_color = '\033[92m' if self.gross_loss >= 0 else '\033[91m'
+        avg_win_color = '\033[92m' if self.avg_win >= 0 else '\033[91m'
+        avg_loss_color = '\033[92m' if self.avg_loss >= 0 else '\033[91m'
+        max_win_color = '\033[92m' if self.max_win >= 0 else '\033[91m'
+        max_loss_color = '\033[92m' if self.max_loss >= 0 else '\033[91m'
+        fees_color = '\033[92m' if self.fees_paid >= 0 else '\033[91m'
         
-        # Header
-        lines.append(f"\n{Colors.BOLD}{Colors.UNDERLINE}BACKTEST STATISTICS{Colors.END}")
-        lines.append("=" * 50)
+        # Winrate colors
+        pos_wr_color = '\033[92m' if pos_winrate_pct >= 50 else '\033[93m' if pos_winrate_pct >= 30 else '\033[91m'
+        exit_wr_color = '\033[92m' if exit_winrate_pct >= 50 else '\033[93m' if exit_winrate_pct >= 30 else '\033[91m'
+        long_wr_color = '\033[92m' if long_winrate_pct >= 50 else '\033[93m' if long_winrate_pct >= 30 else '\033[91m'
+        short_wr_color = '\033[92m' if short_winrate_pct >= 50 else '\033[93m' if short_winrate_pct >= 30 else '\033[91m'
+        pf_color = '\033[92m' if self.profit_factor >= 1.5 else '\033[93m' if self.profit_factor >= 1.0 else '\033[91m'
         
-        # Position Overview
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}📊 POSITION OVERVIEW{Colors.END}")
-        lines.append(format_metric("Total Positions", self.positions))
-        lines.append(format_metric("Positions per hour", self.position_frquency, is_currency=False))
-        lines.append(format_metric("Long Positions", self.longs))
-        lines.append(format_metric("Short Positions", self.shorts))
-        lines.append(format_metric("Exposure Time (hours)", self.exposure_time))
-        lines.append(format_metric("Avg Position Duration", self.avg_position_duration))
+        end = '\033[0m'
         
-        # Win/Loss Analysis
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}🎯 WIN/LOSS ANALYSIS{Colors.END}")
-        lines.append(format_metric("Position Wins", self.position_wins))
-        lines.append(format_metric("Position Losses", self.position_losses))
-        
-        # Color code win rates
-        winrate_color = Colors.GREEN if self.position_winrate >= 0.5 else Colors.YELLOW if self.position_winrate >= 0.3 else Colors.RED
-        lines.append(f"  {winrate_color}Position Win Rate{Colors.END}      {format_number(self.position_winrate, is_percentage=True)}")
-        
-        lines.append(format_metric("Exit Wins (TP)", self.exit_wins))
-        lines.append(format_metric("Exit Losses (SL)", self.exit_losses))
-        
-        exit_winrate_color = Colors.GREEN if self.exit_winrate >= 0.5 else Colors.YELLOW if self.exit_winrate >= 0.3 else Colors.RED
-        lines.append(f"  {exit_winrate_color}Exit Win Rate{Colors.END}        {format_number(self.exit_winrate, is_percentage=True)}")
-        
-        # Long/Short Performance
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}📈 LONG/SHORT PERFORMANCE{Colors.END}")
-        lines.append(format_metric("Long Wins", self.long_wins))
-        
-        long_winrate_color = Colors.GREEN if self.long_winrate >= 0.5 else Colors.YELLOW if self.long_winrate >= 0.3 else Colors.RED
-        lines.append(f"  {long_winrate_color}Long Win Rate{Colors.END}        {format_number(self.long_winrate, is_percentage=True)}")
-        
-        lines.append(format_metric("Short Wins", self.short_wins))
-        
-        short_winrate_color = Colors.GREEN if self.short_winrate >= 0.5 else Colors.YELLOW if self.short_winrate >= 0.3 else Colors.RED
-        lines.append(f"  {short_winrate_color}Short Win Rate{Colors.END}       {format_number(self.short_winrate, is_percentage=True)}")
-        
-        # Profit & Loss
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}💰 PROFIT & LOSS{Colors.END}")
-        lines.append(format_metric("Current PnL", self.pnl, is_currency=True))
-        lines.append(format_metric("Total PnL", self.total_pnl, is_currency=True))
-        lines.append(format_metric("Avg Position PnL", self.avg_position_pnl, is_currency=True))
-        lines.append(format_metric("Gross Profit", self.gross_profit, is_currency=True))
-        lines.append(format_metric("Gross Loss", self.gross_loss, is_currency=True))
-        
-        # Profit Factor with color coding
-        pf_color = Colors.GREEN if self.profit_factor >= 1.5 else Colors.YELLOW if self.profit_factor >= 1.0 else Colors.RED
-        lines.append(f"  {pf_color}Profit Factor{Colors.END}             {format_number(self.profit_factor)}")
-        
-        lines.append(format_metric("Average Win", self.avg_win, is_currency=True))
-        lines.append(format_metric("Average Loss", self.avg_loss, is_currency=True))
-        
-        # Risk Metrics
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}⚠️ RISK METRICS{Colors.END}")
-        
-        # Max drawdown with color coding
-        lines.append(format_metric("Max Drawdown", -self.max_drawdown, is_currency=True))
-        lines.append(format_metric("Peak equity", self.peak_equity, is_currency=True))
-        lines.append(format_metric("Sharpe Ratio", self.sharpe_ratio))
-        
-        lines.append(format_metric("Max Single Win", self.max_win, is_currency=True))
-        lines.append(format_metric("Max Single Loss", self.max_loss, is_currency=True))
-        lines.append(format_metric("Max Win Streak", self.max_win_streak))
-        lines.append(format_metric("Max Loss Streak", self.max_loss_streak))
-        
-        # Trading Costs
-        lines.append(f"\n{Colors.HEADER}{Colors.BOLD}💸 TRADING COSTS{Colors.END}")
-        lines.append(format_metric("Total Fees Paid", self.fees_paid, is_currency=True))
-        
-        # Footer
-        lines.append(f"\n{'=' * 50}")
-        
-        return '\n'.join(lines)
+        # Build string using list join (faster than concatenation)
+        return (
+            f"\n\033[1m\033[4mBACKTEST STATISTICS{end}\n"
+            f"{'=' * 50}\n"
+            f"\n\033[95m\033[1m📊 POSITION OVERVIEW{end}\n"
+            f"  \033[96mTotal Positions{end}          {positions_str}\n"
+            f"  \033[96mPositions per hour{end}       {freq_str}\n"
+            f"  \033[96mLong Positions{end}           {longs_str}\n"
+            f"  \033[96mShort Positions{end}          {shorts_str}\n"
+            f"  \033[96mExposure Time (hours){end}    {exposure_str}\n"
+            f"  \033[96mAvg Position Duration{end}    {avg_dur_str}\n"
+            f"\n\033[95m\033[1m🎯 WIN/LOSS ANALYSIS{end}\n"
+            f"  \033[96mPosition Wins{end}            {pos_wins_str}\n"
+            f"  \033[96mPosition Losses{end}          {pos_losses_str}\n"
+            f"  {pos_wr_color}Position Win Rate{end}      {pos_winrate_pct:.2f}%\n"
+            f"  \033[96mExit Wins (TP){end}           {exit_wins_str}\n"
+            f"  \033[96mExit Losses (SL){end}         {exit_losses_str}\n"
+            f"  {exit_wr_color}Exit Win Rate{end}        {exit_winrate_pct:.2f}%\n"
+            f"\n\033[95m\033[1m📈 LONG/SHORT PERFORMANCE{end}\n"
+            f"  \033[96mLong Wins{end}                {long_wins_str}\n"
+            f"  {long_wr_color}Long Win Rate{end}        {long_winrate_pct:.2f}%\n"
+            f"  \033[96mShort Wins{end}               {short_wins_str}\n"
+            f"  {short_wr_color}Short Win Rate{end}       {short_winrate_pct:.2f}%\n"
+            f"\n\033[95m\033[1m💰 PROFIT & LOSS{end}\n"
+            f"  \033[96mCurrent PnL{end}              {pnl_color}${self.pnl:,.2f}{end}\n"
+            f"  \033[96mTotal PnL{end}                {total_pnl_color}${self.total_pnl:,.2f}{end}\n"
+            f"  \033[96mAvg Position PnL{end}         {avg_pnl_color}${self.avg_position_pnl:,.2f}{end}\n"
+            f"  \033[96mGross Profit{end}             {gross_profit_color}${self.gross_profit:,.2f}{end}\n"
+            f"  \033[96mGross Loss{end}               {gross_loss_color}${self.gross_loss:,.2f}{end}\n"
+            f"  {pf_color}Profit Factor{end}             {self.profit_factor:,.2f}\n"
+            f"  \033[96mAverage Win{end}              {avg_win_color}${self.avg_win:,.2f}{end}\n"
+            f"  \033[96mAverage Loss{end}             {avg_loss_color}${self.avg_loss:,.2f}{end}\n"
+            f"\n\033[95m\033[1m⚠️ RISK METRICS{end}\n"
+            f"  \033[96mMax Drawdown{end}             {gross_loss_color}${-self.max_drawdown:,.2f}{end}\n"
+            f"  \033[96mPeak equity{end}              {gross_profit_color}${self.peak_equity:,.2f}{end}\n"
+            f"  \033[96mSharpe Ratio{end}             {self.sharpe_ratio:,.2f}\n"
+            f"  \033[96mMax Single Win{end}           {max_win_color}${self.max_win:,.2f}{end}\n"
+            f"  \033[96mMax Single Loss{end}          {max_loss_color}${self.max_loss:,.2f}{end}\n"
+            f"  \033[96mMax Win Streak{end}           {self.max_win_streak:,}\n"
+            f"  \033[96mMax Loss Streak{end}          {self.max_loss_streak:,}\n"
+            f"\n\033[95m\033[1m💸 TRADING COSTS{end}\n"
+            f"  \033[96mTotal Fees Paid{end}          {fees_color}${self.fees_paid:,.2f}{end}\n"
+            f"\n{'=' * 50}"
+        )
 
 
 class BaseBacktester():
-    def __init__(self, position_manager: BasePositionManager, equity_log_file: str = "equity_log.csv", flush_interval: int = 2):
+    __slots__ = ('position_manager', 'stats', 'w_streak', 'l_streak', 'peak_equity', 
+                 '_pnl_history', '_perf_times', '_pnl_array')
+    
+    def __init__(self, position_manager: BasePositionManager):
         self.position_manager = position_manager
         self.stats = BaseBacktestStats()
         self.w_streak = 0
         self.l_streak = 0
         self.peak_equity = 0.0
-        self._pnl_history = deque(maxlen=100)  # store rolling realized PnL for Sharpe ratio
-
-        # Equity logging
-        self.equity_log_file = Path(equity_log_file)
-        self.flush_interval = flush_interval
-        self._equity_buffer = []
-        self._last_flush = time.time()
-
-        if not self.equity_log_file.exists():
-            with open(self.equity_log_file, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["timestamp", "equity"])
-
-    def _log_equity(self, equity: float):
-        """Buffer equity value and flush to disk periodically."""
-        ts = time.time()
-        self._equity_buffer.append((ts, equity))
-
-        # Flush based on buffer size or every 5s
-        if len(self._equity_buffer) >= self.flush_interval or (time.time() - self._last_flush > 5):
-            with open(self.equity_log_file, "a", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerows(self._equity_buffer)
-            self._equity_buffer.clear()
-            self._last_flush = time.time()
+        self._pnl_history = deque(maxlen=100)
+        self._pnl_array = np.empty(100, dtype=np.float64)  # Pre-allocate numpy array
             
     def update(self, candle: BaseCandle) -> None:
+        
+        # Cache frequently accessed objects in locals (major optimization)
         pos = self.position_manager.position
-        self.stats.pnl = self.position_manager.get_unrealized_pnl(candle)
-        self.stats.current_price = candle.close
+        stats = self.stats
+        pm = self.position_manager
+        
+        # Update PnL and price
+        stats.pnl = pm.get_unrealized_pnl(candle)
+        stats.current_price = candle.close
+        stats.current_position_info = pm.get_current_position_info() or {}
 
-        # Update current position info for plotting
-        self.stats.current_position_info = self.position_manager.get_current_position_info() or {}
-
-        # Handle open position: TP, SL, Liquidation
-        if pos and pos.qty > 0:
-
-            # Take-Profit
-            tp_to_remove = []
-            for idx, (tp_price, tp_qty) in enumerate(pos.tp):
-                if (pos.side == pos.side.LONG and candle.high >= tp_price) or \
-                (pos.side == pos.side.SHORT and candle.low <= tp_price):
-                    tp_to_remove.append(idx)
-                    
-                    # Record the TP hit event before closing
-                    self.position_manager.record_tp_hit(candle, tp_price, tp_qty)
-                    
-                    self.position_manager.set_hit_take_profit()
-                    self.position_manager.close(candle, qty=tp_qty)
-                    self.stats.exit_wins += 1
+        # Handle open position
+        pos_qty = pos.qty if pos else 0
+        if pos_qty > 0:
+            # Cache candle values and position side
+            c_high = candle.high
+            c_low = candle.low
+            pos_side = pos.side
+            is_long = pos_side == pos_side.LONG
             
-            # Remove processed TP orders (in reverse order to maintain indices)
-            for idx in reversed(tp_to_remove):
-                pos.tp.pop(idx)
+            # Take-Profit handling
+            tp_list = pos.tp
+            tp_len = len(tp_list)
+            if tp_len:
+                tp_to_remove = []
+                for idx in range(tp_len):
+                    tp_price, tp_qty = tp_list[idx]
+                    if (is_long and c_high >= tp_price) or (not is_long and c_low <= tp_price):
+                        tp_to_remove.append(idx)
+                        pm.record_tp_hit(candle, tp_price, tp_qty)
+                        pm.set_hit_take_profit()
+                        pm.close(candle, qty=tp_qty)
+                        stats.exit_wins += 1
+                
+                for tp in tp_to_remove[::-1]:
+                    tp_list.pop(tp)
 
-            # Stop-Loss
-            sl_to_remove = []
-            for idx, (sl_price, sl_qty) in enumerate(pos.sl):
-                if (pos.side == pos.side.LONG and candle.low <= sl_price) or \
-                (pos.side == pos.side.SHORT and candle.high >= sl_price):
-                    sl_to_remove.append(idx)
+            # Stop-Loss handling
+            sl_list = pos.sl
+            sl_len = len(sl_list)
+            if sl_len:
+                sl_to_remove = []
+                for idx in range(sl_len):
+                    sl_price, sl_qty = sl_list[idx]
+                    if (is_long and c_low <= sl_price) or (not is_long and c_high >= sl_price):
+                        sl_to_remove.append(idx)
+                        pm.record_sl_hit(candle, sl_price, sl_qty)
+                        pm.set_hit_stop_loss()
+                        pm.close(candle, qty=sl_qty)
+                        stats.exit_losses += 1
+                
+                for sl in sl_to_remove[::-1]:
+                    sl_list.pop(sl)
                     
-                    # Record the SL hit event before closing
-                    self.position_manager.record_sl_hit(candle, sl_price, sl_qty)
-                    
-                    self.position_manager.set_hit_stop_loss()
-                    self.position_manager.close(candle, qty=sl_qty)
-                    self.stats.exit_losses += 1
-            
-            # Remove processed SL orders (in reverse order to maintain indices)
-            for idx in reversed(sl_to_remove):
-                pos.sl.pop(idx)
-                    
-            # Check if position is closed
+            # Check if position closed
             if pos.qty == 0:
-                # Check if position is a win
-                if pos.realized_pnl > 0:
-                    self.stats.position_wins += 1
-                    self.stats.gross_profit += pos.realized_pnl
-                    self.stats.max_win = max(self.stats.max_win, pos.realized_pnl)
+                pos_pnl = pos.realized_pnl
+                is_win = pos_pnl > 0
+                
+                # Update win/loss statistics
+                if is_win:
+                    stats.position_wins += 1
+                    stats.gross_profit += pos_pnl
+                    stats.max_win = max(stats.max_win, pos_pnl)
                     self.w_streak += 1
                     self.l_streak = 0
-                    if pos.side == pos.side.LONG:
-                        self.stats.long_wins += 1
-                    elif pos.side == pos.side.SHORT:
-                        self.stats.short_wins += 1
+                    if is_long:
+                        stats.long_wins += 1
+                    else:
+                        stats.short_wins += 1
                 else:
-                    self.stats.position_losses += 1
-                    self.stats.gross_loss += pos.realized_pnl
-                    self.stats.max_loss = min(self.stats.max_loss, pos.realized_pnl)
+                    stats.position_losses += 1
+                    stats.gross_loss += pos_pnl
+                    stats.max_loss = min(stats.max_loss, pos_pnl)
                     self.l_streak += 1
                     self.w_streak = 0
 
                 # Calculate position duration
-                if pos.entry_orders and pos.exit_orders:
-                    open_time = pos.entry_orders[0].timestamp
-                    close_time = pos.exit_orders[-1].timestamp
-                    duration = (close_time - open_time).total_seconds() / 3600
-                    self.stats.exposure_time += duration
+                entry_orders = pos.entry_orders
+                exit_orders = pos.exit_orders
+                if entry_orders and exit_orders:
+                    duration = (exit_orders[-1].timestamp - entry_orders[0].timestamp).total_seconds() / 3600
+                    stats.exposure_time += duration
 
-                self.stats.max_win_streak = max(self.stats.max_win_streak, self.w_streak)
-                self.stats.max_loss_streak = max(self.stats.max_loss_streak, self.l_streak)
-                self.stats.total_pnl += pos.realized_pnl
+                stats.max_win_streak = max(stats.max_win_streak, self.w_streak)
+                stats.max_loss_streak = max(stats.max_loss_streak, self.l_streak)
+                stats.total_pnl += pos_pnl
 
-                # --- Update Sharpe ratio based on realized PnL changes ---
-                self._pnl_history.append(self.stats.total_pnl)
-
-                if len(self._pnl_history) > 2:
-                    returns = [
-                        (self._pnl_history[i] - self._pnl_history[i - 1]) / abs(self._pnl_history[i - 1])
-                        for i in range(1, len(self._pnl_history))
-                        if self._pnl_history[i - 1] != 0
-                    ]
-
-                    if len(returns) > 1:
-                        avg_return = sum(returns) / len(returns)
-                        variance = sum((r - avg_return) ** 2 for r in returns) / (len(returns) - 1)
-                        std_dev = variance ** 0.5
-                        self.stats.sharpe_ratio = (avg_return / std_dev) * (len(returns) ** 0.5) if std_dev > 0 else 0.0
+                pnl_hist = self._pnl_history
+                pnl_hist.append(stats.total_pnl)
+                hist_len = len(pnl_hist)
+                
+                if hist_len > 2:
+                    pnl_arr = self._pnl_array[:hist_len]
+                    for i in range(hist_len):
+                        pnl_arr[i] = pnl_hist[i]
+                    
+                    prev_vals = pnl_arr[:hist_len-1]
+                    curr_vals = pnl_arr[1:hist_len]
+                    
+                    mask = prev_vals != 0
+                    if mask.any():
+                        returns = (curr_vals[mask] - prev_vals[mask]) / np.abs(prev_vals[mask])
+                        ret_len = len(returns)
+                        
+                        if ret_len > 1:
+                            mean_ret = np.mean(returns)
+                            std_ret = np.std(returns, ddof=1)
+                            stats.sharpe_ratio = (mean_ret / std_ret) * np.sqrt(ret_len) if std_ret > 0 else 0.0
+                        else:
+                            stats.sharpe_ratio = 0.0
                     else:
-                        self.stats.sharpe_ratio = 0.0
+                        stats.sharpe_ratio = 0.0
 
-                self.stats.avg_win = self.stats.gross_profit / self.stats.position_wins if self.stats.position_wins > 0 else 0.0
-                self.stats.avg_loss = self.stats.gross_loss / self.stats.position_losses if self.stats.position_losses > 0 else 0.0
+                # Cache division results
+                pos_wins = stats.position_wins
+                pos_losses = stats.position_losses
+                stats.avg_win = stats.gross_profit / pos_wins if pos_wins else 0.0
+                stats.avg_loss = stats.gross_loss / pos_losses if pos_losses else 0.0
 
-        # Update general stats
-        self.stats.positions = self.position_manager.position_count
-        self.stats.fees_paid = self.position_manager.total_fees
-        total_exits = self.stats.exit_wins + self.stats.exit_losses
-        self.stats.exit_winrate = (self.stats.exit_wins / total_exits) if total_exits > 0 else 0.0
-        self.stats.profit_factor = (self.stats.gross_profit / abs(self.stats.gross_loss)) if self.stats.gross_loss < 0 else float('inf')
-        self.stats.longs = self.position_manager.total_longs
-        self.stats.long_winrate = (self.stats.long_wins / self.stats.longs) if self.stats.longs > 0 else 0.0
-        self.stats.shorts = self.position_manager.total_shorts
-        self.stats.short_winrate = (self.stats.short_wins / self.stats.shorts) if self.stats.shorts > 0 else 0.0
-        self.stats.position_winrate = (self.stats.position_wins / self.stats.positions) if self.stats.positions > 0 else 0.0
-        self.stats.position_frquency = self.stats.positions / self.stats.exposure_time if self.stats.exposure_time > 0 else 0.0
-        self.stats.avg_position_pnl = self.stats.total_pnl / self.stats.positions if self.stats.positions > 0 else 0.0
-        self.stats.avg_position_duration = self.stats.exposure_time / self.stats.positions if self.stats.positions > 0 else 0.0
+        # Update general stats - cache values to reduce divisions
+        positions = pm.position_count
+        stats.positions = positions
+        stats.fees_paid = pm.total_fees
+        
+        total_exits = stats.exit_wins + stats.exit_losses
+        stats.exit_winrate = stats.exit_wins / total_exits if total_exits else 0.0
+        
+        gross_loss = stats.gross_loss
+        stats.profit_factor = stats.gross_profit / -gross_loss if gross_loss < 0 else float('inf')
+        
+        longs = pm.total_longs
+        stats.longs = longs
+        stats.long_winrate = stats.long_wins / longs if longs else 0.0
+        
+        shorts = pm.total_shorts
+        stats.shorts = shorts
+        stats.short_winrate = stats.short_wins / shorts if shorts else 0.0
+        
+        stats.position_winrate = stats.position_wins / positions if positions else 0.0
+        
+        exposure = stats.exposure_time
+        stats.position_frquency = positions / exposure if exposure else 0.0
+        stats.avg_position_pnl = stats.total_pnl / positions if positions else 0.0
+        stats.avg_position_duration = exposure / positions if positions else 0.0
 
         # Update equity and drawdown
-        equity = self.stats.pnl + self.stats.total_pnl
-        self.stats.equity = equity
-        self.stats.peak_equity = max(self.peak_equity, equity)
-        drawdown = self.stats.peak_equity - equity
-        self.stats.max_drawdown = max(self.stats.max_drawdown, drawdown)
+        equity = stats.pnl + stats.total_pnl
+        stats.equity = equity
+        peak = max(self.peak_equity, equity)
+        self.peak_equity = peak
+        stats.peak_equity = peak
+        stats.max_drawdown = max(stats.max_drawdown, peak - equity)
 
-        self._log_equity(equity)
-
+    
     def get_recent_position_events(self):
         """Get recent position events for plotting."""
         return self.position_manager.get_recent_events()

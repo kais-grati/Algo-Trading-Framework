@@ -22,13 +22,6 @@ class BaseSubscriber(ABC):
     async def async_update(self, candle: BaseCandle) -> None:
         await asyncio.to_thread(self.update, candle)
 
-    """
-    Synchronous update method for strategies that do not require async handling.
-    
-    :param candle: The new candle data to update the strategy with.
-    """
-    def update(self, candle: BaseCandle) -> None:
-        raise NotImplementedError("Sync update not implemented")
 
     """Called when data stream finishes"""
     async def on_stream_end(self) -> None:
@@ -51,10 +44,8 @@ class BaseDataProvider(ABC):
         for subscriber in self._subscribers:
             try:
                 tasks.append(subscriber.async_update(candle))
-            except NotImplementedError:
-                tasks.append(asyncio.create_task(
-                    asyncio.to_thread(subscriber.update, candle)
-                ))
+            except:
+                pass
         
         await asyncio.gather(*tasks, return_exceptions=True)
     
